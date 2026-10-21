@@ -309,4 +309,206 @@ BEGIN
         &#x27;Inactivo (0)&#x27; AS estado_actual,
         CURRENT_TIMESTAMP AS fecha_operacion;
 END ;;
-</code></pre></details></article></section><section id="dominios"><h2>Dominios y ENUM</h2><h3>ENUM</h3><div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Valores</th><th>Usos</th></tr></thead><tbody><tr><td><code>enum(&#x27;Pending&#x27;,&#x27;Accepted&#x27;,&#x27;Preparing&#x27;,&#x27;Sent&#x27;,&#x27;Delivered&#x27;,&#x27;Canceled&#x27;,&#x27;Returned&#x27;)</code></td><td>Pending, Accepted, Preparing, Sent, Delivered, Canceled, Returned</td><td>tb_buyer_orders.fulfillment_status</td></tr><tr><td><code>enum(&#x27;Create&#x27;,&#x27;Read&#x27;,&#x27;Update&#x27;,&#x27;Delete&#x27;)</code></td><td>Create, Read, Update, Delete</td><td>tb_logs.operation</td></tr><tr><td><code>enum(&#x27;Pending&#x27;,&#x27;Processing&#x27;,&#x27;Shipped&#x27;,&#x27;Delivered&#x27;,&#x27;Cancelled&#x27;)</code></td><td>Pending, Processing, Shipped, Delivered, Cancelled</td><td>tb_orders.status</td></tr><tr><td><code>enum(&#x27;Pending&#x27;,&#x27;Completed&#x27;,&#x27;Failed&#x27;,&#x27;Refunded&#x27;)</code></td><td>Pending, Completed, Failed, Refunded</td><td>tb_payments.payment_status</td></tr><tr><td><code>enum(&#x27;Owner&#x27;,&#x27;Reseller&#x27;,&#x27;Distributor&#x27;)</code></td><td>Owner, Reseller, Distributor</td><td>tbd_products_users_providers.type_ownership</td></tr></tbody></table></div><h3>status</h3><div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Significado/dominio</th><th>Usos</th></tr></thead><tbody><tr><td><code>bit(1)</code></td><td>1 = activo; 0 = inactivo</td><td>tb_buyer_orders.status, tb_carts.status, tb_user_addresses.status, tb_users.status, tbc_categories.status, tbc_payment_methods.status, tbc_payment_methods_types.status, tbd_address_components.status, tbd_products_categories.status, tbd_products_users_providers.status, tbd_user_payment_methods.status, tbd_users_wishlist_products.status</td></tr><tr><td><code>enum(&#x27;Pending&#x27;,&#x27;Processing&#x27;,&#x27;Shipped&#x27;,&#x27;Delivered&#x27;,&#x27;Cancelled&#x27;)</code></td><td>Dominio entero definido por SQL</td><td>tb_orders.status</td></tr><tr><td><code>tinyint</code></td><td>Dominio entero definido por SQL</td><td>tb_products.status</td></tr></tbody></table></div></section><section id="convenciones"><h2>Convenciones de nombres</h2><ul><li>`tb_`: tabla principal; `tbc_`: catálogo; `tbd_`: detalle/relación; `vw_`: vista; `trg_`: trigger; `sp_`: procedimiento; `fk_`: restricción FK; `uk_`: restricción UNIQUE; `chk_`: CHECK.</li><li>`creation_date`, `last_update` y `status` son columnas de auditoría/estado cuando aparecen; el SQL define defaults y comportamiento concretos en cada tabla. `status` no se asume equivalente entre tipos.</li></ul></section><section id="leyenda"><h2>Leyenda de la notación y criterios de clasificación</h2><ul><li>`=` significa “se compone de”; `+` significa “y”; `[a | b]` significa “uno de”; `{x}` significa repetición; `(x)` significa opcional; `*texto*` es comentario o dominio.</li><li>`@columna` marca una PK; `#columna` marca una FK. En PK compuestas todas las columnas de la clave se enumeran en la notación y el campo Llave muestra la composición completa.</li><li>Las expresiones atómicas se escriben como `columna = {tipo}` y pueden incluir dominio o fórmula entre `*...*`.</li></ul><ul><li>Valor: las llaves y referencias escalares son monovalor; los atributos que se repiten por concepto se identifican con su tabla de relación o componentes. Texto que agrupa datos se marca como compuesto en texto libre.</li><li>Origen: almacenado si se persiste; derivado si es GENERATED, con expresión SQL. Importes persistidos calculables se identifican como almacenados derivables, sin inventar fórmula no declarada.</li><li>Obligatoriedad: NOT NULL es obligatorio, NULL es opcional. Se indica si AUTO_INCREMENT/DEFAULT lo asigna el sistema o si el origen se infiere.</li><li>Llave: PK, PK compuesta (miembros completos), FK (destino), UK o No. Naturaleza: ENUM de estados procesales es ordinal; demás ENUM son nominales; numéricos discretos/continuos y fechas temporales.</li><li>Dominio: tipo, longitud/precisión, valores ENUM y CHECK del DDL; si el SQL no define un rango/formato, se indica el tipo y que no hay una restricción adicional declarada.</li></ul></section><section id="resumen"><h2>Resumen estadístico</h2><h3>Naturaleza</h3><ul><li>Cualitativa nominal: 89</li><li>Cuantitativa continua: 11</li><li>Cualitativa ordinal: 3</li><li>Cuantitativa (temporal): 34</li><li>Cuantitativa discreta: 4</li></ul><h3>Obligatoriedad</h3><ul><li>Obligatorio: 112</li><li>Opcional: 29</li></ul><h3>Origen</h3><ul><li>Almacenado: 139</li><li>Derivado: 2</li></ul><h3>Llaves</h3><ul><li>PK: 25</li><li>FK: 26</li><li>UK: 13</li></ul></section><section id="observaciones"><h2>Observaciones de calidad</h2><ul><li>**Alta —** `tbd_products_categories.category_ID` carece de FK a `tbc_categories`. Recomendación: declarar FK y decidir acciones referenciales.</li><li>**Alta —** existen dos posibles modelos paralelos de órdenes: `tb_orders`/`tbd_order_details` y `tb_buyer_orders`/`tbd_order_items`. Recomendación: confirmar si cubren flujos distintos y documentar el límite funcional.</li><li>**Alta —** `tb_buyer_orders` solo guarda `seller_ID`; no identifica comprador. Recomendación: agregar vínculo al comprador si el proceso lo requiere.</li><li>**Media —** `tbd_carts_items` y `tbd_order_items` separan referencias `user_ID` y `product_ID` hacia `tbd_products_users_providers` en vez de una FK compuesta. Recomendación: usar FK compuesta o validar consistencia en otro mecanismo.</li><li>**Media —** las llaves relacionadas usan tipos INT, INT UNSIGNED y BIGINT; `status` combina bit(1) y tinyint. Recomendación: normalizar tipos/signo y dominio documentando migración.</li><li>**Baja —** se detectaron variaciones en nombres de triggers (por ejemplo, prefijos omitidos). Recomendación: adoptar convención uniforme.</li></ul><p>**Verificación de nombres obsoletos:** Verificado: sin referencias huérfanas</p></section><section id="diagrama"><h2>Diagrama ER</h2><p>Diagramas generados a partir de las PK y FK del esquema. Usa los controles para ampliar o reducir; también puedes desplazarte dentro de cada módulo.</p><div class="zoom"><button type="button" data-zoom="out">−</button><button type="button" data-zoom="in">+</button><button type="button" data-zoom="reset">Restablecer</button></div><div class="diagram-panel"><h3>Usuarios y direcciones</h3><div class="diagram-viewport"><div class="diagram-scale"><pre class="mermaid">erDiagramtb_user_addresses {bigint ID PKint user_ID FKvarchar address_labelvarchar recipient_namevarchar recipient_phonevarchar delivery_instructionsdecimal latitudedecimal longitudetinyint is_defaultbit statusdatetime creation_datedatetime last_update}tb_users {int ID PKvarchar emailvarchar nicknamevarchar passworddatetime creation_datedatetime last_loginbit status}tbd_address_components {bigint ID PKbigint address_ID FKvarchar valuevarchar component_typebit statusbigint address_sup_ID FKdatetime creation_datedatetime last_update}tb_users ||--o{ tb_user_addresses : "fk_addresses_users"tb_user_addresses ||--o{ tbd_address_components : "fk_component_address"tbd_address_components ||--o{ tbd_address_components : "fk_component_parent"</pre></div></div></div><div class="diagram-panel"><h3>Productos y categorías</h3><div class="diagram-viewport"><div class="diagram-scale"><pre class="mermaid">erDiagramtb_products {int ID PKvarchar SKUvarchar nametext descriptiondecimal current_priceint current_stocktinyint statusdatetime creation_datedatetime last_update}tbc_categories {int ID PKvarchar nametext descriptionint sup_id_category FKbit statusdatetime creation_datedatetime last_update}tbd_products_categories {int category_ID PKint product_ID PK,FKbit statusdatetime creation_datedatetime last_update}tbd_products_users_providers {int user_ID PK,FKint product_ID PK,FKenum type_ownershipbit statusdatetime avalaible_datedatetime creation_datedatetime last_update}tbc_categories ||--o{ tbc_categories : "fk_superior_category"tb_products ||--o{ tbd_products_categories : "fk_product"tb_products ||--o{ tbd_products_users_providers : "fk_products2"</pre></div></div></div><div class="diagram-panel"><h3>Carritos y wishlist</h3><div class="diagram-viewport"><div class="diagram-scale"><pre class="mermaid">erDiagramtb_carts {int ID PKint user_ID FKbit statusdatetime creation_datedatetime last_update}tbd_carts_items {int cart_ID PK,FKint provider_ID PK,FKint product_ID PK,FKint quantitydatetime creation_date}tbd_users_wishlist_products {int user_ID PK,FKint product_ID PK,FKbit statusdatetime creation_datedatetime last_update}tbd_wishlist {int ID PKint user_id FKint product_id FKdatetime creation_date}tb_carts ||--o{ tbd_carts_items : "fk_cart_items_cart"</pre></div></div></div><div class="diagram-panel"><h3>Órdenes y pagos</h3><div class="diagram-viewport"><div class="diagram-scale"><pre class="mermaid">erDiagramtb_buyer_orders {int ID PKint seller_ID FKdecimal subtotaldecimal shipping_costenum fulfillment_statusbit statusdatetime creation_datedatetime last_update}tb_orders {int ID PKint user_id FKdecimal total_amountenum statustext shipping_addressdatetime creation_datedatetime last_update}tb_payments {int ID PKint order_id FKint payment_method_id FKdecimal amountenum payment_statusvarchar transaction_referencedatetime payment_date}tbc_payment_methods {int ID PKvarchar nametext descriptionbit statusdatetime creation_date}tbc_payment_methods_types {int ID PKvarchar codetext descriptionbit statusdatetime creation_datedatetime last_update}tbd_order_details {int ID PKint order_id FKint product_id FKint quantitydecimal unit_pricedecimal subtotaldatetime creation_date}tbd_order_items {int ID PKint buyer_order_ID FKint product_ID FKint provider_ID FKvarchar product_nameint quantitydecimal unit_pricedecimal subtotaldatetime creation_date}tbd_user_payment_methods {bigint ID PKint user_ID FKint payment_method_type_ID FKvarchar providervarchar provider_method_refvarchar labelchar last_fourtinyint is_defaultbit statusdatetime creation_datedatetime last_update}tbc_payment_methods ||--o{ tb_payments : "fk_payments_method"tb_orders ||--o{ tb_payments : "fk_payments_order"tb_orders ||--o{ tbd_order_details : "fk_order_details_order"tb_buyer_orders ||--o{ tbd_order_items : "fk_order_items_buyer_order"tbc_payment_methods_types ||--o{ tbd_user_payment_methods : "tbd_user_payment_methods_ibfk_2"</pre></div></div></div><div class="diagram-panel"><h3>Auditoría</h3><div class="diagram-viewport"><div class="diagram-scale"><pre class="mermaid">erDiagramtb_logs {int ID PKvarchar table_nameenum operationvarchar db_usertext descriptiondatetime operation_datebit operation_status}</pre></div></div></div></section><section id="pendientes"><h2>Pendientes por confirmar</h2><ul><li>tb_payments.transaction_reference: confirmar qué pasarelas o medios pueden dejar la referencia NULL y el momento en que se recibe.</li><li>tb_products.SKU: confirmar el estándar del código y si se captura manualmente o se importa desde otro sistema.</li><li>tb_products.current_price: confirmar qué proceso o rol autoriza y actualiza el precio vigente.</li><li>tb_products.current_stock: confirmar si el inventario se actualiza automáticamente con ventas y reposiciones.</li><li>tb_user_addresses.address_label: confirmar las etiquetas de dirección permitidas y su captura en la aplicación.</li><li>tb_user_addresses.recipient_name, recipient_phone y delivery_instructions: confirmar en qué operaciones de entrega son necesarios.</li><li>tbc_payment_methods_types.code: confirmar el sistema que asigna los códigos del catálogo.</li><li>tbd_address_components.value y component_type: confirmar los tipos de componente y las reglas para dividir/validar direcciones.</li><li>tbd_order_items.product_name: confirmar si se guarda como copia histórica del nombre al crear la orden.</li><li>tbd_products_users_providers.type_ownership y avalaible_date: confirmar cuándo se asigna el rol y qué evento define la fecha de disponibilidad.</li><li>tbd_user_payment_methods.provider y provider_method_ref: confirmar el formato y el origen exacto de la referencia externa; no se infiere que contenga datos completos de tarjeta.</li></ul></section><footer>Generado localmente con HTML, CSS y JavaScript. Mermaid.js 11.4.1 se carga desde jsDelivr.</footer></main></body></html>
+</code></pre></details></article></section><section id="dominios"><h2>Dominios y ENUM</h2><h3>ENUM</h3><div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Valores</th><th>Usos</th></tr></thead><tbody><tr><td><code>enum(&#x27;Pending&#x27;,&#x27;Accepted&#x27;,&#x27;Preparing&#x27;,&#x27;Sent&#x27;,&#x27;Delivered&#x27;,&#x27;Canceled&#x27;,&#x27;Returned&#x27;)</code></td><td>Pending, Accepted, Preparing, Sent, Delivered, Canceled, Returned</td><td>tb_buyer_orders.fulfillment_status</td></tr><tr><td><code>enum(&#x27;Create&#x27;,&#x27;Read&#x27;,&#x27;Update&#x27;,&#x27;Delete&#x27;)</code></td><td>Create, Read, Update, Delete</td><td>tb_logs.operation</td></tr><tr><td><code>enum(&#x27;Pending&#x27;,&#x27;Processing&#x27;,&#x27;Shipped&#x27;,&#x27;Delivered&#x27;,&#x27;Cancelled&#x27;)</code></td><td>Pending, Processing, Shipped, Delivered, Cancelled</td><td>tb_orders.status</td></tr><tr><td><code>enum(&#x27;Pending&#x27;,&#x27;Completed&#x27;,&#x27;Failed&#x27;,&#x27;Refunded&#x27;)</code></td><td>Pending, Completed, Failed, Refunded</td><td>tb_payments.payment_status</td></tr><tr><td><code>enum(&#x27;Owner&#x27;,&#x27;Reseller&#x27;,&#x27;Distributor&#x27;)</code></td><td>Owner, Reseller, Distributor</td><td>tbd_products_users_providers.type_ownership</td></tr></tbody></table></div><h3>status</h3><div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Significado/dominio</th><th>Usos</th></tr></thead><tbody><tr><td><code>bit(1)</code></td><td>1 = activo; 0 = inactivo</td><td>tb_buyer_orders.status, tb_carts.status, tb_user_addresses.status, tb_users.status, tbc_categories.status, tbc_payment_methods.status, tbc_payment_methods_types.status, tbd_address_components.status, tbd_products_categories.status, tbd_products_users_providers.status, tbd_user_payment_methods.status, tbd_users_wishlist_products.status</td></tr><tr><td><code>enum(&#x27;Pending&#x27;,&#x27;Processing&#x27;,&#x27;Shipped&#x27;,&#x27;Delivered&#x27;,&#x27;Cancelled&#x27;)</code></td><td>Dominio entero definido por SQL</td><td>tb_orders.status</td></tr><tr><td><code>tinyint</code></td><td>Dominio entero definido por SQL</td><td>tb_products.status</td></tr></tbody></table></div></section><section id="convenciones"><h2>Convenciones de nombres</h2><ul><li>`tb_`: tabla principal; `tbc_`: catálogo; `tbd_`: detalle/relación; `vw_`: vista; `trg_`: trigger; `sp_`: procedimiento; `fk_`: restricción FK; `uk_`: restricción UNIQUE; `chk_`: CHECK.</li><li>`creation_date`, `last_update` y `status` son columnas de auditoría/estado cuando aparecen; el SQL define defaults y comportamiento concretos en cada tabla. `status` no se asume equivalente entre tipos.</li></ul></section><section id="leyenda"><h2>Leyenda de la notación y criterios de clasificación</h2><ul><li>`=` significa “se compone de”; `+` significa “y”; `[a | b]` significa “uno de”; `{x}` significa repetición; `(x)` significa opcional; `*texto*` es comentario o dominio.</li><li>`@columna` marca una PK; `#columna` marca una FK. En PK compuestas todas las columnas de la clave se enumeran en la notación y el campo Llave muestra la composición completa.</li><li>Las expresiones atómicas se escriben como `columna = {tipo}` y pueden incluir dominio o fórmula entre `*...*`.</li></ul><ul><li>Valor: las llaves y referencias escalares son monovalor; los atributos que se repiten por concepto se identifican con su tabla de relación o componentes. Texto que agrupa datos se marca como compuesto en texto libre.</li><li>Origen: almacenado si se persiste; derivado si es GENERATED, con expresión SQL. Importes persistidos calculables se identifican como almacenados derivables, sin inventar fórmula no declarada.</li><li>Obligatoriedad: NOT NULL es obligatorio, NULL es opcional. Se indica si AUTO_INCREMENT/DEFAULT lo asigna el sistema o si el origen se infiere.</li><li>Llave: PK, PK compuesta (miembros completos), FK (destino), UK o No. Naturaleza: ENUM de estados procesales es ordinal; demás ENUM son nominales; numéricos discretos/continuos y fechas temporales.</li><li>Dominio: tipo, longitud/precisión, valores ENUM y CHECK del DDL; si el SQL no define un rango/formato, se indica el tipo y que no hay una restricción adicional declarada.</li></ul></section><section id="resumen"><h2>Resumen estadístico</h2><h3>Naturaleza</h3><ul><li>Cualitativa nominal: 89</li><li>Cuantitativa continua: 11</li><li>Cualitativa ordinal: 3</li><li>Cuantitativa (temporal): 34</li><li>Cuantitativa discreta: 4</li></ul><h3>Obligatoriedad</h3><ul><li>Obligatorio: 112</li><li>Opcional: 29</li></ul><h3>Origen</h3><ul><li>Almacenado: 139</li><li>Derivado: 2</li></ul><h3>Llaves</h3><ul><li>PK: 25</li><li>FK: 26</li><li>UK: 13</li></ul></section><section id="observaciones"><h2>Observaciones de calidad</h2><ul><li>**Alta —** `tbd_products_categories.category_ID` carece de FK a `tbc_categories`. Recomendación: declarar FK y decidir acciones referenciales.</li><li>**Alta —** existen dos posibles modelos paralelos de órdenes: `tb_orders`/`tbd_order_details` y `tb_buyer_orders`/`tbd_order_items`. Recomendación: confirmar si cubren flujos distintos y documentar el límite funcional.</li><li>**Alta —** `tb_buyer_orders` solo guarda `seller_ID`; no identifica comprador. Recomendación: agregar vínculo al comprador si el proceso lo requiere.</li><li>**Media —** `tbd_carts_items` y `tbd_order_items` separan referencias `user_ID` y `product_ID` hacia `tbd_products_users_providers` en vez de una FK compuesta. Recomendación: usar FK compuesta o validar consistencia en otro mecanismo.</li><li>**Media —** las llaves relacionadas usan tipos INT, INT UNSIGNED y BIGINT; `status` combina bit(1) y tinyint. Recomendación: normalizar tipos/signo y dominio documentando migración.</li><li>**Baja —** se detectaron variaciones en nombres de triggers (por ejemplo, prefijos omitidos). Recomendación: adoptar convención uniforme.</li></ul><p>**Verificación de nombres obsoletos:** Verificado: sin referencias huérfanas</p></section><section id="diagrama"><h2>Diagrama ER</h2><p>Diagramas generados a partir de las PK y FK del esquema. Usa los controles para ampliar o reducir; también puedes desplazarte dentro de cada módulo.</p><div class="zoom"><button type="button" data-zoom="out">−</button><button type="button" data-zoom="in">+</button><button type="button" data-zoom="reset">Restablecer</button></div><div class="diagram-panel"><h3>Usuarios y direcciones</h3><div class="diagram-viewport"><div class="diagram-scale"><pre class="mermaid">erDiagram
+tb_user_addresses {
+bigint ID PK
+int user_ID FK
+varchar address_label
+varchar recipient_name
+varchar recipient_phone
+varchar delivery_instructions
+decimal latitude
+decimal longitude
+tinyint is_default
+bit status
+datetime creation_date
+datetime last_update
+}
+tb_users {
+int ID PK
+varchar email
+varchar nickname
+varchar password
+datetime creation_date
+datetime last_login
+bit status
+}
+tbd_address_components {
+bigint ID PK
+bigint address_ID FK
+varchar value
+varchar component_type
+bit status
+bigint address_sup_ID FK
+datetime creation_date
+datetime last_update
+}
+tb_users ||--o{ tb_user_addresses : "fk_addresses_users"
+tb_user_addresses ||--o{ tbd_address_components : "fk_component_address"
+tbd_address_components ||--o{ tbd_address_components : "fk_component_parent"
+</pre></div></div></div>
+<div class="diagram-panel"><h3>Productos y categorías</h3><div class="diagram-viewport"><div class="diagram-scale"><pre class="mermaid">erDiagram
+tb_products {
+int ID PK
+varchar SKU
+varchar name
+text description
+decimal current_price
+int current_stock
+tinyint status
+datetime creation_date
+datetime last_update
+}
+tbc_categories {
+int ID PK
+varchar name
+text description
+int sup_id_category FK
+bit status
+datetime creation_date
+datetime last_update
+}
+tbd_products_categories {
+int category_ID PK
+int product_ID PK, FK
+bit status
+datetime creation_date
+datetime last_update
+}
+tbd_products_users_providers {
+int user_ID PK, FK
+int product_ID PK, FK
+enum type_ownership
+bit status
+datetime avalaible_date
+datetime creation_date
+datetime last_update
+}
+tbc_categories ||--o{ tbc_categories : "fk_superior_category"
+tb_products ||--o{ tbd_products_categories : "fk_product"
+tb_products ||--o{ tbd_products_users_providers : "fk_products2"
+</pre></div></div></div>
+<div class="diagram-panel"><h3>Carritos y wishlist</h3><div class="diagram-viewport"><div class="diagram-scale"><pre class="mermaid">erDiagram
+tb_carts {
+int ID PK
+int user_ID FK
+bit status
+datetime creation_date
+datetime last_update
+}
+tbd_carts_items {
+int cart_ID PK, FK
+int provider_ID PK, FK
+int product_ID PK, FK
+int quantity
+datetime creation_date
+}
+tbd_users_wishlist_products {
+int user_ID PK, FK
+int product_ID PK, FK
+bit status
+datetime creation_date
+datetime last_update
+}
+tbd_wishlist {
+int ID PK
+int user_id FK
+int product_id FK
+datetime creation_date
+}
+tb_carts ||--o{ tbd_carts_items : "fk_cart_items_cart"
+</pre></div></div></div>
+<div class="diagram-panel"><h3>Órdenes y pagos</h3><div class="diagram-viewport"><div class="diagram-scale"><pre class="mermaid">erDiagram
+tb_buyer_orders {
+int ID PK
+int seller_ID FK
+decimal subtotal
+decimal shipping_cost
+enum fulfillment_status
+bit status
+datetime creation_date
+datetime last_update
+}
+tb_orders {
+int ID PK
+int user_id FK
+decimal total_amount
+enum status
+text shipping_address
+datetime creation_date
+datetime last_update
+}
+tb_payments {
+int ID PK
+int order_id FK
+int payment_method_id FK
+decimal amount
+enum payment_status
+varchar transaction_reference
+datetime payment_date
+}
+tbc_payment_methods {
+int ID PK
+varchar name
+text description
+bit status
+datetime creation_date
+}
+tbc_payment_methods_types {
+int ID PK
+varchar code
+text description
+bit status
+datetime creation_date
+datetime last_update
+}
+tbd_order_details {
+int ID PK
+int order_id FK
+int product_id FK
+int quantity
+decimal unit_price
+decimal subtotal
+datetime creation_date
+}
+tbd_order_items {
+int ID PK
+int buyer_order_ID FK
+int product_ID FK
+int provider_ID FK
+varchar product_name
+int quantity
+decimal unit_price
+decimal subtotal
+datetime creation_date
+}
+tbd_user_payment_methods {
+bigint ID PK
+int user_ID FK
+int payment_method_type_ID FK
+varchar provider
+varchar provider_method_ref
+varchar label
+char last_four
+tinyint is_default
+bit status
+datetime creation_date
+datetime last_update
+}
+tbc_payment_methods ||--o{ tb_payments : "fk_payments_method"
+tb_orders ||--o{ tb_payments : "fk_payments_order"
+tb_orders ||--o{ tbd_order_details : "fk_order_details_order"
+tb_buyer_orders ||--o{ tbd_order_items : "fk_order_items_buyer_order"
+tbc_payment_methods_types ||--o{ tbd_user_payment_methods : "tbd_user_payment_methods_ibfk_2"
+</pre></div></div></div>
+<div class="diagram-panel"><h3>Auditoría</h3><div class="diagram-viewport"><div class="diagram-scale"><pre class="mermaid">erDiagram
+tb_logs {
+int ID PK
+varchar table_name
+enum operation
+varchar db_user
+text description
+datetime operation_date
+bit operation_status
+}
+</pre></div></div></div></section><section id="pendientes"><h2>Pendientes por confirmar</h2><ul><li>tb_payments.transaction_reference: confirmar qué pasarelas o medios pueden dejar la referencia NULL y el momento en que se recibe.</li><li>tb_products.SKU: confirmar el estándar del código y si se captura manualmente o se importa desde otro sistema.</li><li>tb_products.current_price: confirmar qué proceso o rol autoriza y actualiza el precio vigente.</li><li>tb_products.current_stock: confirmar si el inventario se actualiza automáticamente con ventas y reposiciones.</li><li>tb_user_addresses.address_label: confirmar las etiquetas de dirección permitidas y su captura en la aplicación.</li><li>tb_user_addresses.recipient_name, recipient_phone y delivery_instructions: confirmar en qué operaciones de entrega son necesarios.</li><li>tbc_payment_methods_types.code: confirmar el sistema que asigna los códigos del catálogo.</li><li>tbd_address_components.value y component_type: confirmar los tipos de componente y las reglas para dividir/validar direcciones.</li><li>tbd_order_items.product_name: confirmar si se guarda como copia histórica del nombre al crear la orden.</li><li>tbd_products_users_providers.type_ownership y avalaible_date: confirmar cuándo se asigna el rol y qué evento define la fecha de disponibilidad.</li><li>tbd_user_payment_methods.provider y provider_method_ref: confirmar el formato y el origen exacto de la referencia externa; no se infiere que contenga datos completos de tarjeta.</li></ul></section><footer>Generado localmente con HTML, CSS y JavaScript. Mermaid.js 11.4.1 se carga desde jsDelivr.</footer></main></body></html>

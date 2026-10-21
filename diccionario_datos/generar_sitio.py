@@ -26,6 +26,12 @@ def split_defs(sql):
         elif re.match(r'(PRIMARY KEY|UNIQUE KEY|KEY|CONSTRAINT|CHECK)', line, re.I): cons.append(line)
     return cols, cons
 
+def er_name(value):
+    return re.sub(r'[^A-Za-z0-9_]', '_', value)
+
+def er_type(value):
+    return re.sub(r'[^A-Za-z0-9_]', '', value.split('(', 1)[0].split()[0]).lower()
+
 def obj_group(name):
     if 'order' in name or 'payment' in name: return 'Órdenes y pagos'
     if 'product' in name or 'categor' in name: return 'Productos y categorías'
@@ -142,19 +148,18 @@ for module,names in MODULES.items():
   cols,cons=split_defs(t['sql']); pk=[]
   for con in cons:
    if con.startswith('PRIMARY KEY'): pk=re.findall(r'`([^`]+)`',con)
-  diagrams.append(f'{t["name"]} {{')
+  diagrams.append(f'{er_name(t["name"])} {{')
   for col,typ in cols:
    flags=[]
    if col in pk: flags.append('PK')
    if any(a==t['name'] and col in re.findall(r'`([^`]+)`',raw) for a,_,raw,_,_ in fk_list): flags.append('FK')
-   safe_type=re.match(r'\w+',typ).group(0) if re.match(r'\w+',typ) else 'string'
-   diagrams.append(f'{safe_type} {col}'+(' '+','.join(flags) if flags else ''))
+   diagrams.append(f'{er_type(typ)} {er_name(col)}'+(' '+', '.join(flags) if flags else ''))
   diagrams.append('}')
  for child,fk,raw,parent,raw_ref in fk_list:
   if child in names and parent in names:
-   diagrams.append(f'{parent} ||--o{{ {child} : "{fk}"')
+   diagrams.append(f'{er_name(parent)} ||--o{{ {er_name(child)} : "{er_name(fk)}"')
  diagrams.append('</pre></div></div></div>')
-diagram_html=''.join(diagrams)
+diagram_html='\n'.join(diagrams)
 
 nav=[('inicio','Inicio'),('tablas','Tablas'),('vistas','Vistas'),('triggers','Triggers'),('procedimientos','Procedimientos'),('dominios','Dominios y ENUM'),('convenciones','Convenciones'),('leyenda','Notación y criterios'),('resumen','Resumen estadístico'),('observaciones','Observaciones de calidad'),('diagrama','Diagrama ER')]
 sidebar=''.join(f'<a href="#{i}">{esc(label)}</a>' for i,label in nav)

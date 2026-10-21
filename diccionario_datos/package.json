@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "description": "Parsers usados por validar_sitio.py",
+  "devDependencies": {
+    "@dbml/core": "10.3.1",
+    "mermaid": "11.4.1"
+  }
+}

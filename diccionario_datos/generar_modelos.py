@@ -10,6 +10,12 @@ def tablecols(t):
    cols.append((m.group(1),re.match(r'(\w+(?:\s*\([^)]*\))?)',m.group(2)).group(1)))
   elif re.match(r'(PRIMARY KEY|UNIQUE KEY|KEY|CONSTRAINT|CHECK)',z,re.I): cons.append(z)
  return cols,cons
+def safe_name(value):
+ return re.sub(r'[^A-Za-z0-9_]', '_', value)
+def mermaid_type(value):
+ # ER attributes accept a single token only; precision and ENUM values remain
+ # documented in the data dictionary rather than in the diagram.
+ return re.sub(r'[^A-Za-z0-9_]', '', value.split('(', 1)[0].split()[0]).lower()
 fks=[]
 for t in ts:
  for z in tablecols(t)[1]:
@@ -21,25 +27,39 @@ for t in ts:
  cols,cons=tablecols(t); pkcols=[]
  for z in cons:
   if z.startswith('PRIMARY KEY'): pkcols=re.findall(r'`([^`]+)`',z)
- mmd.append('  '+t['name']+' {')
+ mmd.append('  '+safe_name(t['name'])+' {')
  for c,typ in cols:
-  flag=' PK' if c in pkcols else ''
-  if any(a==t['name'] and c in re.findall(r'`([^`]+)`',cc) for a,_,cc,_,_,_ in fks): flag+=' FK'
-  mmd.append(f'    {typ.replace(" ","_")} {c}{flag}')
+  flags=[]
+  if c in pkcols: flags.append('PK')
+  if any(a==t['name'] and c in re.findall(r'`([^`]+)`',cc) for a,_,cc,_,_,_ in fks): flags.append('FK')
+  flag=' '+', '.join(flags) if flags else ''
+  mmd.append(f'    {mermaid_type(typ)} {safe_name(c)}{flag}')
  mmd.append('  }')
-for a,n,c,b,bc,act in fks: mmd.append(f'  {b} ||--o{{ {a} : "{n}"')
+for a,n,c,b,bc,act in fks: mmd.append(f'  {safe_name(b)} ||--o{{ {safe_name(a)} : "{safe_name(n)}"')
 (D/'diagrama_er.mmd').write_text('\n'.join(mmd)+'\n',encoding='utf-8')
 # DBML
 bml=[]
+enum_types={}
+for t in ts:
+ for c,typ in tablecols(t)[0]:
+  if typ.lower().startswith('enum') and typ not in enum_types:
+   enum_types[typ]=f'enum_{len(enum_types)+1}'
 for t in ts:
  cols,cons=tablecols(t); bml += [f'Table {t["name"]} {{']
  pkcols=[]
  for z in cons:
   if z.startswith('PRIMARY KEY'): pkcols=re.findall(r'`([^`]+)`',z)
- for c,typ in cols: bml.append(f'  {c} {typ}'+(' [pk]' if c in pkcols else ''))
+ for c,typ in cols:
+  dbml_type=enum_types.get(typ,typ)
+  bml.append(f'  {c} {dbml_type}'+(' [pk]' if c in pkcols else ''))
+ bml.append('}')
+for typ,name in enum_types.items():
+ values=re.findall(r"'((?:''|[^'])*)'",typ)
+ bml.append(f'Enum {name} {{')
+ bml.extend(f'  {v.replace("''", "'")}' for v in values)
  bml.append('}')
 for a,n,c,b,bc,act in fks:
- ca=re.findall(r'`([^`]+)`',c); cb=re.findall(r'`([^`]+)`',bc); left=f'{a}.{ca[0]}' if len(ca)==1 else f'({", ".join(a+"."+q for q in ca)})'; right=f'{b}.{cb[0]}' if len(cb)==1 else f'({", ".join(b+"."+q for q in cb)})'; bml.append(f'Ref: {left} > {right} // {n} {act}')
+ ca=re.findall(r'`([^`]+)`',c); cb=re.findall(r'`([^`]+)`',bc); left=f'{a}.{ca[0]}' if len(ca)==1 else f'{a}.({", ".join(ca)})'; right=f'{b}.{cb[0]}' if len(cb)==1 else f'{b}.({", ".join(cb)})'; bml.append(f'Ref: {left} > {right} // {n} {act}')
 (D/'schema.dbml').write_text('\n'.join(bml)+'\n',encoding='utf-8')
 # workbook rows from schema (inline strings, no optional packages)
 sheets={}

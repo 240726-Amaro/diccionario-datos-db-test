@@ -3,7 +3,7 @@ Table tb_buyer_orders {
   seller_ID int
   subtotal decimal(12,2)
   shipping_cost decimal(12,2)
-  fulfillment_status enum('Pending','Accepted','Preparing','Sent','Delivered','Canceled','Returned')
+  fulfillment_status enum_1
   status bit(1)
   creation_date datetime
   last_update datetime
@@ -18,7 +18,7 @@ Table tb_carts {
 Table tb_logs {
   ID int [pk]
   table_name varchar(100)
-  operation enum('Create','Read','Update','Delete')
+  operation enum_2
   db_user varchar(80)
   description text
   operation_date datetime
@@ -28,7 +28,7 @@ Table tb_orders {
   ID int [pk]
   user_id int
   total_amount decimal(10,2)
-  status enum('Pending','Processing','Shipped','Delivered','Cancelled')
+  status enum_3
   shipping_address text
   creation_date datetime
   last_update datetime
@@ -38,7 +38,7 @@ Table tb_payments {
   order_id int
   payment_method_id int
   amount decimal(10,2)
-  payment_status enum('Pending','Completed','Failed','Refunded')
+  payment_status enum_4
   transaction_reference varchar(150)
   payment_date datetime
 }
@@ -147,7 +147,7 @@ Table tbd_products_categories {
 Table tbd_products_users_providers {
   user_ID int [pk]
   product_ID int [pk]
-  type_ownership enum('Owner','Reseller','Distributor')
+  type_ownership enum_5
   status bit(1)
   avalaible_date datetime
   creation_date datetime
@@ -179,6 +179,39 @@ Table tbd_wishlist {
   product_id int
   creation_date datetime
 }
+Enum enum_1 {
+  Pending
+  Accepted
+  Preparing
+  Sent
+  Delivered
+  Canceled
+  Returned
+}
+Enum enum_2 {
+  Create
+  Read
+  Update
+  Delete
+}
+Enum enum_3 {
+  Pending
+  Processing
+  Shipped
+  Delivered
+  Cancelled
+}
+Enum enum_4 {
+  Pending
+  Completed
+  Failed
+  Refunded
+}
+Enum enum_5 {
+  Owner
+  Reseller
+  Distributor
+}
 Ref: tb_buyer_orders.seller_ID > tb_users.ID // fk_seller_orders_seller 
 Ref: tb_carts.user_ID > tb_users.ID // fk_carts_user 
 Ref: tb_orders.user_id > tb_users.ID // fk_orders_user ON DELETE CASCADE
@@ -187,7 +220,7 @@ Ref: tb_payments.order_id > tb_orders.ID // fk_payments_order ON DELETE CASCADE
 Ref: tb_user_addresses.user_ID > tb_users.ID // fk_addresses_users 
 Ref: tbc_categories.sup_id_category > tbc_categories.ID // fk_superior_category 
 Ref: tbd_address_components.address_ID > tb_user_addresses.ID // fk_component_address ON DELETE RESTRICT
-Ref: (tbd_address_components.address_ID, tbd_address_components.address_sup_ID) > (tbd_address_components.address_ID, tbd_address_components.ID) // fk_component_parent ON DELETE RESTRICT
+Ref: tbd_address_components.(address_ID, address_sup_ID) > tbd_address_components.(address_ID, ID) // fk_component_parent ON DELETE RESTRICT
 Ref: tbd_carts_items.cart_ID > tb_carts.ID // fk_cart_items_cart 
 Ref: tbd_carts_items.product_ID > tbd_products_users_providers.product_ID // fk_cart_items_product 
 Ref: tbd_carts_items.provider_ID > tbd_products_users_providers.user_ID // fk_cart_items_provider 

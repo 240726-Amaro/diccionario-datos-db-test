@@ -2,34 +2,34 @@ erDiagram
   tb_buyer_orders {
     int ID PK
     int seller_ID FK
-    decimal(12,2) subtotal
-    decimal(12,2) shipping_cost
-    enum('Pending','Accepted','Preparing','Sent','Delivered','Canceled','Returned') fulfillment_status
-    bit(1) status
+    decimal subtotal
+    decimal shipping_cost
+    enum fulfillment_status
+    bit status
     datetime creation_date
     datetime last_update
   }
   tb_carts {
     int ID PK
     int user_ID FK
-    bit(1) status
+    bit status
     datetime creation_date
     datetime last_update
   }
   tb_logs {
     int ID PK
-    varchar(100) table_name
-    enum('Create','Read','Update','Delete') operation
-    varchar(80) db_user
+    varchar table_name
+    enum operation
+    varchar db_user
     text description
     datetime operation_date
-    bit(1) operation_status
+    bit operation_status
   }
   tb_orders {
     int ID PK
     int user_id FK
-    decimal(10,2) total_amount
-    enum('Pending','Processing','Shipped','Delivered','Cancelled') status
+    decimal total_amount
+    enum status
     text shipping_address
     datetime creation_date
     datetime last_update
@@ -38,17 +38,17 @@ erDiagram
     int ID PK
     int order_id FK
     int payment_method_id FK
-    decimal(10,2) amount
-    enum('Pending','Completed','Failed','Refunded') payment_status
-    varchar(150) transaction_reference
+    decimal amount
+    enum payment_status
+    varchar transaction_reference
     datetime payment_date
   }
   tb_products {
     int ID PK
-    varchar(50) SKU
-    varchar(250) name
+    varchar SKU
+    varchar name
     text description
-    decimal(10,2) current_price
+    decimal current_price
     int current_stock
     tinyint status
     datetime creation_date
@@ -57,64 +57,64 @@ erDiagram
   tb_user_addresses {
     bigint ID PK
     int user_ID FK
-    varchar(100) address_label
-    varchar(150) recipient_name
-    varchar(25) recipient_phone
-    varchar(500) delivery_instructions
-    decimal(10,7) latitude
-    decimal(10,7) longitude
-    tinyint(1) is_default
-    bit(1) status
+    varchar address_label
+    varchar recipient_name
+    varchar recipient_phone
+    varchar delivery_instructions
+    decimal latitude
+    decimal longitude
+    tinyint is_default
+    bit status
     datetime creation_date
     datetime last_update
   }
   tb_users {
     int ID PK
-    varchar(80) email
-    varchar(100) nickname
-    varchar(255) password
+    varchar email
+    varchar nickname
+    varchar password
     datetime creation_date
     datetime last_login
-    bit(1) status
+    bit status
   }
   tbc_categories {
     int ID PK
-    varchar(120) name
+    varchar name
     text description
     int sup_id_category FK
-    bit(1) status
+    bit status
     datetime creation_date
     datetime last_update
   }
   tbc_payment_methods {
     int ID PK
-    varchar(100) name
+    varchar name
     text description
-    bit(1) status
+    bit status
     datetime creation_date
   }
   tbc_payment_methods_types {
     int ID PK
-    varchar(30) code
+    varchar code
     text description
-    bit(1) status
+    bit status
     datetime creation_date
     datetime last_update
   }
   tbd_address_components {
     bigint ID PK
     bigint address_ID FK
-    varchar(255) value
-    varchar(50) component_type
-    bit(1) status
+    varchar value
+    varchar component_type
+    bit status
     bigint address_sup_ID FK
     datetime creation_date
     datetime last_update
   }
   tbd_carts_items {
-    int cart_ID PK FK
-    int provider_ID PK FK
-    int product_ID PK FK
+    int cart_ID PK, FK
+    int provider_ID PK, FK
+    int product_ID PK, FK
     int quantity
     datetime creation_date
   }
@@ -123,8 +123,8 @@ erDiagram
     int order_id FK
     int product_id FK
     int quantity
-    decimal(10,2) unit_price
-    decimal(10,2) subtotal
+    decimal unit_price
+    decimal subtotal
     datetime creation_date
   }
   tbd_order_items {
@@ -132,24 +132,24 @@ erDiagram
     int buyer_order_ID FK
     int product_ID FK
     int provider_ID FK
-    varchar(255) product_name
+    varchar product_name
     int quantity
-    decimal(12,2) unit_price
-    decimal(12,2) subtotal
+    decimal unit_price
+    decimal subtotal
     datetime creation_date
   }
   tbd_products_categories {
     int category_ID PK
-    int product_ID PK FK
-    bit(1) status
+    int product_ID PK, FK
+    bit status
     datetime creation_date
     datetime last_update
   }
   tbd_products_users_providers {
-    int user_ID PK FK
-    int product_ID PK FK
-    enum('Owner','Reseller','Distributor') type_ownership
-    bit(1) status
+    int user_ID PK, FK
+    int product_ID PK, FK
+    enum type_ownership
+    bit status
     datetime avalaible_date
     datetime creation_date
     datetime last_update
@@ -158,19 +158,19 @@ erDiagram
     bigint ID PK
     int user_ID FK
     int payment_method_type_ID FK
-    varchar(60) provider
-    varchar(255) provider_method_ref
-    varchar(100) label
-    char(4) last_four
-    tinyint(1) is_default
-    bit(1) status
+    varchar provider
+    varchar provider_method_ref
+    varchar label
+    char last_four
+    tinyint is_default
+    bit status
     datetime creation_date
     datetime last_update
   }
   tbd_users_wishlist_products {
-    int user_ID PK FK
-    int product_ID PK FK
-    bit(1) status
+    int user_ID PK, FK
+    int product_ID PK, FK
+    bit status
     datetime creation_date
     datetime last_update
   }

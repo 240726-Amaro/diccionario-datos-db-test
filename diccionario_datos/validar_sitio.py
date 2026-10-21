@@ -2,6 +2,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 import json
 import re
+import subprocess
+import html as html_lib
 from zipfile import BadZipFile, ZipFile
 
 
@@ -55,6 +57,45 @@ for value in parser.targets:
     elif not (DOCS / value).exists():
         broken.append(f"missing:{value}")
 assert not broken, broken
+
+# Parse diagrams with Mermaid's own parser so the validation follows the same
+# grammar as the generated ER diagrams. Install the pinned parsers with
+# `npm --prefix diccionario_datos install` before running this validator.
+mermaid_modules = [html_lib.unescape(x) for x in re.findall(
+    r'<pre\s+class="mermaid">([\s\S]*?)</pre>', html
+)]
+full_mmd = (ROOT / "diccionario_datos" / "diagrama_er.mmd").read_text(encoding="utf-8")
+node_validation = r'''(async () => {
+  const fs = require('node:fs');
+  const { createRequire } = require('node:module');
+  const { pathToFileURL } = require('node:url');
+  const input = JSON.parse(fs.readFileSync(0, 'utf8'));
+  const localRequire = createRequire(input.packagePath);
+  const mermaid = await import(pathToFileURL(localRequire.resolve('mermaid')));
+  const parseMermaid = mermaid.default.parse;
+  const errors = [];
+  for (let i = 0; i < input.modules.length; i++) {
+    try { await parseMermaid(input.modules[i]); console.log(`Mermaid módulo ${i + 1}: OK`); }
+  catch (e) { errors.push(`Módulo ${i + 1}: ${e.message || e}`); console.log(`Mermaid módulo ${i + 1}: ERROR`); }
+  }
+  try { await parseMermaid(input.full); console.log('Mermaid archivo completo: OK'); }
+  catch (e) { errors.push(`Archivo completo: ${e.message || e}`); console.log('Mermaid archivo completo: ERROR'); }
+  const dbml = await import(pathToFileURL(localRequire.resolve('@dbml/core')));
+  const parser = dbml.Parser || dbml.default?.Parser;
+  try { parser.parse(input.dbml, 'dbml'); console.log('DBML schema.dbml: OK'); }
+  catch (e) { errors.push(`schema.dbml: ${e.message || e.diags?.map(d => d.message).join('; ') || e}`); console.log('DBML schema.dbml: ERROR'); }
+  if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1; }
+})().catch(e => { console.error(`No se pudo cargar Mermaid/@dbml/core: ${e.message}`); process.exit(2); });'''
+dbml_text = (ROOT / "diccionario_datos" / "schema.dbml").read_text(encoding="utf-8")
+validation = subprocess.run(
+    ["node", "-e", node_validation],
+    input=json.dumps({"modules": mermaid_modules, "full": full_mmd, "dbml": dbml_text,
+                      "packagePath": str(SOURCE.parent / "package.json")}),
+    text=True, capture_output=True,
+)
+print(validation.stdout, end="")
+if validation.returncode:
+    raise AssertionError(validation.stderr or "La validación de parsers falló")
 
 patterns = {"@utxicotepec": 0, "$2": 0}
 for path in DOCS.rglob("*"):
