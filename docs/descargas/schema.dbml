@@ -1,0 +1,207 @@
+Table tb_buyer_orders {
+  ID int [pk]
+  seller_ID int
+  subtotal decimal(12,2)
+  shipping_cost decimal(12,2)
+  fulfillment_status enum('Pending','Accepted','Preparing','Sent','Delivered','Canceled','Returned')
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
+Table tb_carts {
+  ID int [pk]
+  user_ID int
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
+Table tb_logs {
+  ID int [pk]
+  table_name varchar(100)
+  operation enum('Create','Read','Update','Delete')
+  db_user varchar(80)
+  description text
+  operation_date datetime
+  operation_status bit(1)
+}
+Table tb_orders {
+  ID int [pk]
+  user_id int
+  total_amount decimal(10,2)
+  status enum('Pending','Processing','Shipped','Delivered','Cancelled')
+  shipping_address text
+  creation_date datetime
+  last_update datetime
+}
+Table tb_payments {
+  ID int [pk]
+  order_id int
+  payment_method_id int
+  amount decimal(10,2)
+  payment_status enum('Pending','Completed','Failed','Refunded')
+  transaction_reference varchar(150)
+  payment_date datetime
+}
+Table tb_products {
+  ID int [pk]
+  SKU varchar(50)
+  name varchar(250)
+  description text
+  current_price decimal(10,2)
+  current_stock int
+  status tinyint
+  creation_date datetime
+  last_update datetime
+}
+Table tb_user_addresses {
+  ID bigint [pk]
+  user_ID int
+  address_label varchar(100)
+  recipient_name varchar(150)
+  recipient_phone varchar(25)
+  delivery_instructions varchar(500)
+  latitude decimal(10,7)
+  longitude decimal(10,7)
+  is_default tinyint(1)
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
+Table tb_users {
+  ID int [pk]
+  email varchar(80)
+  nickname varchar(100)
+  password varchar(255)
+  creation_date datetime
+  last_login datetime
+  status bit(1)
+}
+Table tbc_categories {
+  ID int [pk]
+  name varchar(120)
+  description text
+  sup_id_category int
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
+Table tbc_payment_methods {
+  ID int [pk]
+  name varchar(100)
+  description text
+  status bit(1)
+  creation_date datetime
+}
+Table tbc_payment_methods_types {
+  ID int [pk]
+  code varchar(30)
+  description text
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
+Table tbd_address_components {
+  ID bigint [pk]
+  address_ID bigint
+  value varchar(255)
+  component_type varchar(50)
+  status bit(1)
+  address_sup_ID bigint
+  creation_date datetime
+  last_update datetime
+}
+Table tbd_carts_items {
+  cart_ID int [pk]
+  provider_ID int [pk]
+  product_ID int [pk]
+  quantity int
+  creation_date datetime
+}
+Table tbd_order_details {
+  ID int [pk]
+  order_id int
+  product_id int
+  quantity int
+  unit_price decimal(10,2)
+  subtotal decimal(10,2)
+  creation_date datetime
+}
+Table tbd_order_items {
+  ID int [pk]
+  buyer_order_ID int
+  product_ID int
+  provider_ID int
+  product_name varchar(255)
+  quantity int
+  unit_price decimal(12,2)
+  subtotal decimal(12,2)
+  creation_date datetime
+}
+Table tbd_products_categories {
+  category_ID int [pk]
+  product_ID int [pk]
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
+Table tbd_products_users_providers {
+  user_ID int [pk]
+  product_ID int [pk]
+  type_ownership enum('Owner','Reseller','Distributor')
+  status bit(1)
+  avalaible_date datetime
+  creation_date datetime
+  last_update datetime
+}
+Table tbd_user_payment_methods {
+  ID bigint [pk]
+  user_ID int
+  payment_method_type_ID int
+  provider varchar(60)
+  provider_method_ref varchar(255)
+  label varchar(100)
+  last_four char(4)
+  is_default tinyint(1)
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
+Table tbd_users_wishlist_products {
+  user_ID int [pk]
+  product_ID int [pk]
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
+Table tbd_wishlist {
+  ID int [pk]
+  user_id int
+  product_id int
+  creation_date datetime
+}
+Ref: tb_buyer_orders.seller_ID > tb_users.ID // fk_seller_orders_seller 
+Ref: tb_carts.user_ID > tb_users.ID // fk_carts_user 
+Ref: tb_orders.user_id > tb_users.ID // fk_orders_user ON DELETE CASCADE
+Ref: tb_payments.payment_method_id > tbc_payment_methods.ID // fk_payments_method 
+Ref: tb_payments.order_id > tb_orders.ID // fk_payments_order ON DELETE CASCADE
+Ref: tb_user_addresses.user_ID > tb_users.ID // fk_addresses_users 
+Ref: tbc_categories.sup_id_category > tbc_categories.ID // fk_superior_category 
+Ref: tbd_address_components.address_ID > tb_user_addresses.ID // fk_component_address ON DELETE RESTRICT
+Ref: (tbd_address_components.address_ID, tbd_address_components.address_sup_ID) > (tbd_address_components.address_ID, tbd_address_components.ID) // fk_component_parent ON DELETE RESTRICT
+Ref: tbd_carts_items.cart_ID > tb_carts.ID // fk_cart_items_cart 
+Ref: tbd_carts_items.product_ID > tbd_products_users_providers.product_ID // fk_cart_items_product 
+Ref: tbd_carts_items.provider_ID > tbd_products_users_providers.user_ID // fk_cart_items_provider 
+Ref: tbd_order_details.order_id > tb_orders.ID // fk_order_details_order ON DELETE CASCADE
+Ref: tbd_order_details.product_id > tb_products.ID // fk_order_details_product 
+Ref: tbd_order_items.buyer_order_ID > tb_buyer_orders.ID // fk_order_items_buyer_order 
+Ref: tbd_order_items.product_ID > tbd_products_users_providers.product_ID // fk_order_items_product 
+Ref: tbd_order_items.provider_ID > tbd_products_users_providers.user_ID // fk_order_items_provider 
+Ref: tbd_products_categories.product_ID > tb_products.ID // fk_product 
+Ref: tbd_products_users_providers.product_ID > tb_products.ID // fk_products2 
+Ref: tbd_products_users_providers.user_ID > tb_users.ID // fk_user1 
+Ref: tbd_user_payment_methods.user_ID > tb_users.ID // tbd_user_payment_methods_ibfk_1 
+Ref: tbd_user_payment_methods.payment_method_type_ID > tbc_payment_methods_types.ID // tbd_user_payment_methods_ibfk_2 
+Ref: tbd_users_wishlist_products.product_ID > tb_products.ID // fk_products3 
+Ref: tbd_users_wishlist_products.user_ID > tb_users.ID // fk_user2 
+Ref: tbd_wishlist.product_id > tb_products.ID // fk_wishlist_product ON DELETE CASCADE
+Ref: tbd_wishlist.user_id > tb_users.ID // fk_wishlist_user ON DELETE CASCADE
