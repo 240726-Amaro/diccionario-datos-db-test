@@ -1,7 +1,7 @@
 # Diccionario de datos — BD19
 
-**Motor objetivo:** MySQL 8.0.45. Estructura y totales de registros obtenidos del respaldo BD19.sql (fecha del archivo: 2026-11-04 18:11:43 -06:00). Conteo de registros realizado el: 2026-11-04 18:44:17 -06:00. Los totales corresponden al respaldo, no a la instancia en vivo.
-**Alcance:** 25 tablas seleccionadas por prioridad de población; se incluyen todas las vistas y triggers del respaldo BD19. La asociación con cada tabla se indica cuando existe.
+**Motor objetivo:** MySQL 8.0.45. Estructura y totales de registros obtenidos del respaldo BD19.sql (fecha del archivo: 2026-11-04 18:11:43 -06:00). Conteo de registros realizado el: 2026-11-05 10:48:03 -06:00. Los totales corresponden al respaldo, no a la instancia en vivo.
+**Alcance:** 25 tablas: `tb_logs` y 24 tablas auditadas. Las 24 auditadas se priorizan por población y corresponden a 24 vistas y 72 triggers. `tb_logs` no tiene vista ni trigger propio; se omiten los tres catálogos poblados `tbc_gen_*` porque BD19 tampoco les declara vistas o triggers.
 
 
 ## Leyenda de la notación
@@ -147,7 +147,7 @@
 - **Descripción general detallada:**
   - Mantiene el catálogo de productos con SKU, descripción, precio vigente, existencias y estado de publicación.
   - Pertenece al módulo de productos (inferido por el prefijo y el nombre del objeto).
-  - Relaciones salientes: ninguna FK declarada. Relaciones entrantes: tbd_products_categories.`product_ID`.
+  - Relaciones salientes: ninguna FK declarada. Relaciones entrantes: tbd_products_categories.`product_ID`; tbd_products_users_providers.`product_ID`.
   - Reglas SQL: sin CHECK; UNIQUE UNIQUE KEY `SKU` (`SKU`). Acciones ON DELETE/UPDATE: sin FK salientes con acciones. Columnas generadas: ninguna.
   - Triggers asociados: `trg_products_after_insert`, `trg_products_after_update`, `trg_products_after_delete`; sus acciones de auditoría registran operación y valores NEW/OLD.
 
@@ -176,6 +176,7 @@
 
 - Sin FK salientes.
 - Referenciada por `tbd_products_categories` mediante `product_ID`.
+- Referenciada por `tbd_products_users_providers` mediante `product_ID`.
 
 **Triggers asociados:** `trg_products_after_insert`, `trg_products_after_update`, `trg_products_after_delete`
 
@@ -201,7 +202,7 @@
 - **Descripción general detallada:**
   - Representa cuentas de acceso con correo, alias, hash de contraseña, fechas de actividad y estado.
   - Pertenece al módulo de usuarios (inferido por el prefijo y el nombre del objeto).
-  - Relaciones salientes: ninguna FK declarada. Relaciones entrantes: tb_people.`user_ID`; tb_buyer_orders.`seller_ID`; tb_carts.`user_ID`; tb_order_cancellations.`user_ID`; tb_orders.`user_id`; tb_returns.`user_ID`; tb_user_addresses.`user_ID`.
+  - Relaciones salientes: ninguna FK declarada. Relaciones entrantes: tb_people.`user_ID`; tb_buyer_orders.`seller_ID`; tb_carts.`user_ID`; tb_order_cancellations.`user_ID`; tb_orders.`user_id`; tb_returns.`user_ID`; tb_user_addresses.`user_ID`; tbd_products_users_providers.`user_ID`; tbd_user_payment_methods.`user_ID`.
   - Reglas SQL: sin CHECK; UNIQUE UNIQUE KEY `email` (`email`); UNIQUE UNIQUE KEY `nickname` (`nickname`). Acciones ON DELETE/UPDATE: sin FK salientes con acciones. Columnas generadas: ninguna.
   - Triggers asociados: `trg_users_after_insert`, `trg_users_after_update`, `trg_users_after_delete`; sus acciones de auditoría registran operación y valores NEW/OLD.
 
@@ -235,6 +236,8 @@
 - Referenciada por `tb_orders` mediante `user_id`.
 - Referenciada por `tb_returns` mediante `user_ID`.
 - Referenciada por `tb_user_addresses` mediante `user_ID`.
+- Referenciada por `tbd_products_users_providers` mediante `user_ID`.
+- Referenciada por `tbd_user_payment_methods` mediante `user_ID`.
 
 **Triggers asociados:** `trg_users_after_insert`, `trg_users_after_update`, `trg_users_after_delete`
 
@@ -302,143 +305,6 @@
 | `creation_date` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP) | No | Cuantitativa (temporal) | creation_date = {fecha/hora} | creation_date ∈ DATETIME; default CURRENT_TIMESTAMP | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
 | `last_update` | Monovalor | Almacenado | Opcional (NULL); valor por sistema (DEFAULT NULL) | No | Cuantitativa (temporal) | last_update = {fecha/hora} | last_update ∈ DATETIME; default NULL | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto NULL. |
 
-### `tbc_gen_country_profile`
-
-- **Total de registros:** 12. 
-- **Prefijo/tipo:** catálogo (tbc_). **Módulo:** direcciones (inferido).
-- **Motor/charset/collation:** InnoDB / utf8mb4 / utf8mb4_0900_ai_ci, según opciones del DDL.
-- **Descripción general detallada:**
-  - Catálogo de apoyo para la generación masiva de usuarios; define el país y los parámetros locales usados para construir teléfono y título de cortesía.
-  - Pertenece al módulo de direcciones (inferido por el prefijo y el nombre del objeto).
-  - Relaciones salientes: ninguna FK declarada. Relaciones entrantes: tbc_gen_family_names.`country_code`; tbc_gen_given_names.`country_code`.
-  - Reglas SQL: sin CHECK; sin UNIQUE. Acciones ON DELETE/UPDATE: sin FK salientes con acciones. Columnas generadas: ninguna.
-  - Triggers asociados: ninguno.
-
-**Notación formal:** `tbc_gen_country_profile = @country_code + country_name + phone_prefix + phone_digits + title_male + title_female + status`
-
-**Tabla técnica de columnas**
-
-| # | Nombre | Tipo | Longitud/precisión | NULL | Default | Extras | Llave | Descripción |
-|---:|---|---|---|:---:|---|---|---|---|
-| 1 | `country_code` | `char(2)` | 2 | NO | Sin default | — | PK | Código ISO de dos caracteres que identifica el país usado como clave del perfil de generación; permite relacionar los catálogos auxiliares con sus parámetros locales. |
-| 2 | `country_name` | `varchar(60)` | 60 | NO | Sin default | — | — | Nombre legible del país asociado al código country_code. |
-| 3 | `phone_prefix` | `varchar(6)` | 6 | NO | Sin default | — | — | Prefijo telefónico internacional que se antepone a los dígitos locales al generar teléfonos. |
-| 4 | `phone_digits` | `tinyint` | — | NO | Sin default | — | — | Cantidad de dígitos locales que deben generarse para completar el teléfono del país. |
-| 5 | `title_male` | `varchar(10)` | 10 | NO | Sin default | — | — | Título de cortesía que se asigna a personas del género masculino en el contexto del país. |
-| 6 | `title_female` | `varchar(10)` | 10 | NO | Sin default | — | — | Título de cortesía que se asigna a personas del género femenino en el contexto del país. |
-| 7 | `status` | `bit(1)` | 1 | NO | b'1' | — | — | Indica el estado lógico del registro (inferido); usa DEFAULT b'1'. |
-
-**Restricciones e índices del DDL**
-
-- `PRIMARY KEY (\`country_code\`)`
-
-**Relaciones**
-
-- Sin FK salientes.
-- Referenciada por `tbc_gen_family_names` mediante `country_code`.
-- Referenciada por `tbc_gen_given_names` mediante `country_code`.
-
-**Triggers asociados:** Ninguno.
-
-**Tabla de clasificación de columnas**
-
-| Nombre | Valor | Origen | Obligatoriedad | Llave | Naturaleza | Composición formal | Dominio | Descripción detallada |
-|---|---|---|---|---|---|---|---|---|
-| `country_code` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | PK | Cualitativa nominal | country_code = {carácter} | country_code ∈ cadena(≤2); tipo char(2) | Código ISO de dos caracteres que identifica el país usado como clave del perfil de generación; permite relacionar los catálogos auxiliares con sus parámetros locales. |
-| `country_name` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | No | Cualitativa nominal | country_name = {carácter} | country_name ∈ cadena(≤60); tipo varchar(60) | Nombre legible del país asociado al código country_code. |
-| `phone_prefix` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | No | Cualitativa nominal | phone_prefix = {carácter} | phone_prefix ∈ cadena(≤6); tipo varchar(6) | Prefijo telefónico internacional que se antepone a los dígitos locales al generar teléfonos. |
-| `phone_digits` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | No | Cualitativa nominal | phone_digits = {entero} | phone_digits ∈ ℤ; tipo tinyint | Cantidad de dígitos locales que deben generarse para completar el teléfono del país. |
-| `title_male` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | No | Cualitativa nominal | title_male = {carácter} | title_male ∈ cadena(≤10); tipo varchar(10) | Título de cortesía que se asigna a personas del género masculino en el contexto del país. |
-| `title_female` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | No | Cualitativa nominal | title_female = {carácter} | title_female ∈ cadena(≤10); tipo varchar(10) | Título de cortesía que se asigna a personas del género femenino en el contexto del país. |
-| `status` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT b'1') | No | Cualitativa nominal | status = {0 \| 1} | status ∈ {0,1}; 1 activo, 0 inactivo (borrado lógico); bit(1) | Indica el estado lógico del registro (inferido); usa DEFAULT b'1'. |
-
-### `tbc_gen_family_names`
-
-- **Total de registros:** 225. 
-- **Prefijo/tipo:** catálogo (tbc_). **Módulo:** direcciones (inferido).
-- **Motor/charset/collation:** InnoDB / utf8mb4 / utf8mb4_0900_ai_ci, según opciones del DDL.
-- **Descripción general detallada:**
-  - Catálogo de apoyo para la generación masiva de usuarios; almacena apellidos por país y mantiene FK al perfil del país.
-  - Pertenece al módulo de direcciones (inferido por el prefijo y el nombre del objeto).
-  - Relaciones salientes: `country_code` → tbc_gen_country_profile.`country_code`. Relaciones entrantes: ninguna FK entrante.
-  - Reglas SQL: sin CHECK; UNIQUE UNIQUE KEY `uk_gen_family` (`country_code`,`name`). Acciones ON DELETE/UPDATE: fk_gen_family_country: sin acción referencial explícita. Columnas generadas: ninguna.
-  - Triggers asociados: ninguno.
-
-**Notación formal:** `tbc_gen_family_names = @ID + #country_code + name`
-
-**Tabla técnica de columnas**
-
-| # | Nombre | Tipo | Longitud/precisión | NULL | Default | Extras | Llave | Descripción |
-|---:|---|---|---|:---:|---|---|---|---|
-| 1 | `ID` | `int` | — | NO | Sin default | AUTO_INCREMENT | PK | Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar. |
-| 2 | `country_code` | `char(2)` | 2 | NO | Sin default | — | FK → tbc_gen_country_profile.country_code; UK | Identifica o enlaza el registro con `tbc_gen_country_profile.country_code`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
-| 3 | `name` | `varchar(60)` | 60 | NO | Sin default | — | UK | Apellido disponible para selección aleatoria durante la generación masiva de usuarios. |
-
-**Restricciones e índices del DDL**
-
-- `PRIMARY KEY (\`ID\`)`
-- `UNIQUE KEY \`uk_gen_family\` (\`country_code\`,\`name\`)`
-- `CONSTRAINT \`fk_gen_family_country\` FOREIGN KEY (\`country_code\`) REFERENCES \`tbc_gen_country_profile\` (\`country_code\`)`
-
-**Relaciones**
-
-- `country_code` → `tbc_gen_country_profile.country_code`; sin acción referencial explícita
-
-**Triggers asociados:** Ninguno.
-
-**Tabla de clasificación de columnas**
-
-| Nombre | Valor | Origen | Obligatoriedad | Llave | Naturaleza | Composición formal | Dominio | Descripción detallada |
-|---|---|---|---|---|---|---|---|---|
-| `ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor aportado por sistema (AUTO_INCREMENT) | PK | Cualitativa nominal | ID = {dígito} | ID ∈ ℤ⁺; tipo int; AUTO_INCREMENT | Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar. |
-| `country_code` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | FK → tbc_gen_country_profile.country_code; UK | Cualitativa nominal | country_code = {carácter} | country_code ∈ {tbc_gen_country_profile.country_code}; ON DELETE sin acción | Identifica o enlaza el registro con `tbc_gen_country_profile.country_code`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
-| `name` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | UK | Cualitativa nominal | name = {carácter} | name ∈ cadena(≤60); tipo varchar(60) | Apellido disponible para selección aleatoria durante la generación masiva de usuarios. |
-
-### `tbc_gen_given_names`
-
-- **Total de registros:** 344. 
-- **Prefijo/tipo:** catálogo (tbc_). **Módulo:** direcciones (inferido).
-- **Motor/charset/collation:** InnoDB / utf8mb4 / utf8mb4_0900_ai_ci, según opciones del DDL.
-- **Descripción general detallada:**
-  - Catálogo de apoyo para la generación masiva de usuarios; almacena nombres por país y género, con FK al perfil del país y CHECK de género.
-  - Pertenece al módulo de direcciones (inferido por el prefijo y el nombre del objeto).
-  - Relaciones salientes: `country_code` → tbc_gen_country_profile.`country_code`. Relaciones entrantes: ninguna FK entrante.
-  - Reglas SQL: CHECK ((`gender_ID` in (1,2))); UNIQUE UNIQUE KEY `uk_gen_given` (`country_code`,`gender_ID`,`name`). Acciones ON DELETE/UPDATE: fk_gen_given_country: sin acción referencial explícita. Columnas generadas: ninguna.
-  - Triggers asociados: ninguno.
-
-**Notación formal:** `tbc_gen_given_names = @ID + #country_code + gender_ID + name`
-
-**Tabla técnica de columnas**
-
-| # | Nombre | Tipo | Longitud/precisión | NULL | Default | Extras | Llave | Descripción |
-|---:|---|---|---|:---:|---|---|---|---|
-| 1 | `ID` | `int` | — | NO | Sin default | AUTO_INCREMENT | PK | Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar. |
-| 2 | `country_code` | `char(2)` | 2 | NO | Sin default | — | FK → tbc_gen_country_profile.country_code; UK | Identifica o enlaza el registro con `tbc_gen_country_profile.country_code`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
-| 3 | `gender_ID` | `tinyint unsigned` | — | NO | Sin default | — | UK | Identificador del género al que se asocia el nombre; CHECK restringe el valor a 1 o 2. |
-| 4 | `name` | `varchar(60)` | 60 | NO | Sin default | — | UK | Nombre de pila disponible para selección por país y género durante la generación masiva de usuarios. |
-
-**Restricciones e índices del DDL**
-
-- `PRIMARY KEY (\`ID\`)`
-- `UNIQUE KEY \`uk_gen_given\` (\`country_code\`,\`gender_ID\`,\`name\`)`
-- `CONSTRAINT \`fk_gen_given_country\` FOREIGN KEY (\`country_code\`) REFERENCES \`tbc_gen_country_profile\` (\`country_code\`)`
-- `CONSTRAINT \`chk_gen_given_gender\` CHECK ((\`gender_ID\` in (1,2)))`
-
-**Relaciones**
-
-- `country_code` → `tbc_gen_country_profile.country_code`; sin acción referencial explícita
-
-**Triggers asociados:** Ninguno.
-
-**Tabla de clasificación de columnas**
-
-| Nombre | Valor | Origen | Obligatoriedad | Llave | Naturaleza | Composición formal | Dominio | Descripción detallada |
-|---|---|---|---|---|---|---|---|---|
-| `ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor aportado por sistema (AUTO_INCREMENT) | PK | Cualitativa nominal | ID = {dígito} | ID ∈ ℤ⁺; tipo int; AUTO_INCREMENT | Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar. |
-| `country_code` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | FK → tbc_gen_country_profile.country_code; UK | Cualitativa nominal | country_code = {carácter} | country_code ∈ {tbc_gen_country_profile.country_code}; ON DELETE sin acción | Identifica o enlaza el registro con `tbc_gen_country_profile.country_code`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
-| `gender_ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | UK | Cualitativa nominal | gender_ID = {dígito} | gender_ID ∈ ℤ⁺ ∪ {0}; tipo tinyint unsigned; CHECK ((`gender_ID` in (1,2))) | Identificador del género al que se asocia el nombre; CHECK restringe el valor a 1 o 2. |
-| `name` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | UK | Cualitativa nominal | name = {carácter} | name ∈ cadena(≤60); tipo varchar(60) | Nombre de pila disponible para selección por país y género durante la generación masiva de usuarios. |
-
 ### `tbc_payment_methods`
 
 - **Total de registros:** 1. 
@@ -493,7 +359,7 @@
 - **Descripción general detallada:**
   - Define tipos codificados que clasifican métodos de pago de usuarios.
   - Pertenece al módulo de pagos (inferido por el prefijo y el nombre del objeto).
-  - Relaciones salientes: ninguna FK declarada. Relaciones entrantes: ninguna FK entrante.
+  - Relaciones salientes: ninguna FK declarada. Relaciones entrantes: tbd_user_payment_methods.`payment_method_type_ID`.
   - Reglas SQL: sin CHECK; UNIQUE UNIQUE KEY `code_UNIQUE` (`code`). Acciones ON DELETE/UPDATE: sin FK salientes con acciones. Columnas generadas: ninguna.
   - Triggers asociados: `trg_tbc_payment_methods_types_after_insert`, `trg_tbc_payment_methods_types_after_update`, `trg_tbc_payment_methods_types_after_delete`; sus acciones de auditoría registran operación y valores NEW/OLD.
 
@@ -518,6 +384,7 @@
 **Relaciones**
 
 - Sin FK salientes.
+- Referenciada por `tbd_user_payment_methods` mediante `payment_method_type_ID`.
 
 **Triggers asociados:** `trg_tbc_payment_methods_types_after_insert`, `trg_tbc_payment_methods_types_after_update`, `trg_tbc_payment_methods_types_after_delete`
 
@@ -977,7 +844,7 @@
 - **Descripción general detallada:**
   - Representa solicitudes de devolución asociadas a una orden de comprador y su estado de atención.
   - Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el prefijo y el nombre del objeto).
-  - Relaciones salientes: `buyer_order_ID` → tb_buyer_orders.`ID`; `user_ID` → tb_users.`ID`. Relaciones entrantes: tb_refunds.`return_ID`.
+  - Relaciones salientes: `buyer_order_ID` → tb_buyer_orders.`ID`; `user_ID` → tb_users.`ID`. Relaciones entrantes: tb_refunds.`return_ID`; tbd_return_items.`return_ID`.
   - Reglas SQL: sin CHECK; sin UNIQUE. Acciones ON DELETE/UPDATE: fk_returns_buyer_order: sin acción referencial explícita; fk_returns_user: sin acción referencial explícita. Columnas generadas: ninguna.
   - Triggers asociados: `trg_tb_returns_after_insert`, `trg_tb_returns_after_update`, `trg_tb_returns_after_delete`; sus acciones de auditoría registran operación y valores NEW/OLD.
 
@@ -1009,6 +876,7 @@
 - `buyer_order_ID` → `tb_buyer_orders.ID`; sin acción referencial explícita
 - `user_ID` → `tb_users.ID`; sin acción referencial explícita
 - Referenciada por `tb_refunds` mediante `return_ID`.
+- Referenciada por `tbd_return_items` mediante `return_ID`.
 
 **Triggers asociados:** `trg_tb_returns_after_insert`, `trg_tb_returns_after_update`, `trg_tb_returns_after_delete`
 
@@ -1312,7 +1180,7 @@
 - **Descripción general detallada:**
   - Conserva las líneas de las órdenes de comprador con nombre histórico, cantidad, precio unitario e importe.
   - Pertenece al módulo de órdenes (inferido por el prefijo y el nombre del objeto).
-  - Relaciones salientes: `buyer_order_ID` → tb_buyer_orders.`ID`; `provider_ID`, `product_ID` → tbd_products_users_providers.`user_ID`, `product_ID`. Relaciones entrantes: tbd_cancellation_items.`order_item_ID`.
+  - Relaciones salientes: `buyer_order_ID` → tb_buyer_orders.`ID`; `provider_ID`, `product_ID` → tbd_products_users_providers.`user_ID`, `product_ID`. Relaciones entrantes: tbd_cancellation_items.`order_item_ID`; tbd_return_items.`order_item_ID`.
   - Reglas SQL: CHECK ((`quantity` > 0)); CHECK ((`unit_price` >= 0)); sin UNIQUE. Acciones ON DELETE/UPDATE: fk_order_items_buyer_order: sin acción referencial explícita; fk_order_items_provider_product: sin acción referencial explícita. Columnas generadas: subtotal decimal(12,2).
   - Triggers asociados: `trg_tbd_order_items_after_insert`, `trg_tbd_order_items_after_update`, `trg_tbd_order_items_after_delete`; sus acciones de auditoría registran operación y valores NEW/OLD.
 
@@ -1347,6 +1215,7 @@
 - `buyer_order_ID` → `tb_buyer_orders.ID`; sin acción referencial explícita
 - `provider_ID, product_ID` → `tbd_products_users_providers.user_ID, product_ID`; sin acción referencial explícita
 - Referenciada por `tbd_cancellation_items` mediante `order_item_ID`.
+- Referenciada por `tbd_return_items` mediante `order_item_ID`.
 
 **Triggers asociados:** `trg_tbd_order_items_after_insert`, `trg_tbd_order_items_after_update`, `trg_tbd_order_items_after_delete`
 
@@ -1363,6 +1232,173 @@
 | `unit_price` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | No | Cuantitativa continua | unit_price = {número real} | unit_price ∈ ℝ, precisión 12,2; decimal(12,2); sin rango adicional salvo CHECK explícito; CHECK ((`unit_price` >= 0)) | Guarda el precio unitario aplicado a la línea; el SQL determina su precisión y puede imponer un límite mediante CHECK. |
 | `subtotal` | Monovalor | Derivado: ((`quantity` * `unit_price`)) | Opcional (NULL); valor capturado por usuario/proceso (inferido) | No | Cuantitativa continua | subtotal = quantity × unit_price | subtotal ∈ ℝ, precisión 12,2; decimal(12,2); sin rango adicional salvo CHECK explícito | Almacena un valor calculado por la base de datos; fórmula `((`quantity` * `unit_price`))` y columna generada según DDL. |
 | `creation_date` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP) | No | Cuantitativa (temporal) | creation_date = {fecha/hora} | creation_date ∈ DATETIME; default CURRENT_TIMESTAMP | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+
+### `tbd_products_users_providers`
+
+- **Total de registros:** No verificable en el respaldo. 
+- **Prefijo/tipo:** detalle/relación (tbd_). **Módulo:** usuarios (inferido).
+- **Motor/charset/collation:** InnoDB / utf8mb4 / utf8mb4_0900_ai_ci, según opciones del DDL.
+- **Descripción general detallada:**
+  - Asocia productos con usuarios que actúan como propietarios o proveedores.
+  - Pertenece al módulo de usuarios (inferido por el prefijo y el nombre del objeto).
+  - Relaciones salientes: `product_ID` → tb_products.`ID`; `user_ID` → tb_users.`ID`. Relaciones entrantes: tbd_carts_items.`provider_ID`, `product_ID`; tbd_order_items.`provider_ID`, `product_ID`.
+  - Reglas SQL: sin CHECK; sin UNIQUE. Acciones ON DELETE/UPDATE: fk_products2: sin acción referencial explícita; fk_user1: sin acción referencial explícita. Columnas generadas: ninguna.
+  - Triggers asociados: `trg_tbd_products_users_providers_after_insert`, `trg_tbd_products_users_providers_after_update`, `trg_tbd_products_users_providers_after_delete`; sus acciones de auditoría registran operación y valores NEW/OLD.
+
+**Notación formal:** `tbd_products_users_providers = @#user_ID + @#product_ID + type_ownership + status + avalaible_date + creation_date + last_update`
+
+**Tabla técnica de columnas**
+
+| # | Nombre | Tipo | Longitud/precisión | NULL | Default | Extras | Llave | Descripción |
+|---:|---|---|---|:---:|---|---|---|---|
+| 1 | `user_ID` | `int` | — | NO | Sin default | — | PK compuesta (user_ID, product_ID); FK → tb_users.ID | Identifica o enlaza el registro con `tb_users.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| 2 | `product_ID` | `int unsigned` | — | NO | Sin default | — | PK compuesta (user_ID, product_ID); FK → tb_products.ID | Identifica o enlaza el registro con `tb_products.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| 3 | `type_ownership` | `enum('Owner','Reseller','Distributor')` | 'Owner','Reseller','Distributor' | Sí | NULL | — | — | Clasifica la relación del usuario con el producto mediante Owner, Reseller o Distributor. Es opcional porque DEFAULT NULL permite registrar la relación sin asignar todavía un tipo; se usa para distinguir la función del proveedor (inferido). |
+| 4 | `status` | `bit(1)` | 1 | NO | b'1' | — | — | Indica el estado lógico del registro (inferido); usa DEFAULT b'1'. |
+| 5 | `avalaible_date` | `datetime` | — | NO | Sin default | — | — | Registra desde cuándo está disponible el producto del proveedor (inferido); el valor se captura al registrar su disponibilidad. Es obligatorio y permite determinar desde qué fecha ofrecerlo. |
+| 6 | `creation_date` | `datetime` | — | NO | CURRENT_TIMESTAMP | — | — | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+| 7 | `last_update` | `datetime` | — | NO | CURRENT_TIMESTAMP | ON UPDATE CURRENT_TIMESTAMP | — | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+
+**Restricciones e índices del DDL**
+
+- `PRIMARY KEY (\`user_ID\`,\`product_ID\`)`
+- `KEY \`fk_products2\` (\`product_ID\`)`
+- `CONSTRAINT \`fk_products2\` FOREIGN KEY (\`product_ID\`) REFERENCES \`tb_products\` (\`ID\`)`
+- `CONSTRAINT \`fk_user1\` FOREIGN KEY (\`user_ID\`) REFERENCES \`tb_users\` (\`ID\`)`
+
+**Relaciones**
+
+- `product_ID` → `tb_products.ID`; sin acción referencial explícita
+- `user_ID` → `tb_users.ID`; sin acción referencial explícita
+- Referenciada por `tbd_carts_items` mediante `provider_ID, product_ID`.
+- Referenciada por `tbd_order_items` mediante `provider_ID, product_ID`.
+
+**Triggers asociados:** `trg_tbd_products_users_providers_after_insert`, `trg_tbd_products_users_providers_after_update`, `trg_tbd_products_users_providers_after_delete`
+
+**Tabla de clasificación de columnas**
+
+| Nombre | Valor | Origen | Obligatoriedad | Llave | Naturaleza | Composición formal | Dominio | Descripción detallada |
+|---|---|---|---|---|---|---|---|---|
+| `user_ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | PK compuesta (user_ID, product_ID); FK → tb_users.ID | Cualitativa nominal | user_ID = {dígito} | user_ID ∈ {tb_users.ID}; ON DELETE sin acción | Identifica o enlaza el registro con `tb_users.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| `product_ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | PK compuesta (user_ID, product_ID); FK → tb_products.ID | Cualitativa nominal | product_ID = {dígito} | product_ID ∈ {tb_products.ID}; ON DELETE sin acción | Identifica o enlaza el registro con `tb_products.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| `type_ownership` | Monovalor | Almacenado | Opcional (NULL); valor por sistema (DEFAULT NULL) | No | Cualitativa nominal | type_ownership = [ Owner \| Reseller \| Distributor ] | type_ownership ∈ {Owner, Reseller, Distributor}; tipo enum('Owner','Reseller','Distributor') | Clasifica la relación del usuario con el producto mediante Owner, Reseller o Distributor. Es opcional porque DEFAULT NULL permite registrar la relación sin asignar todavía un tipo; se usa para distinguir la función del proveedor (inferido). |
+| `status` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT b'1') | No | Cualitativa nominal | status = {0 \| 1} | status ∈ {0,1}; 1 activo, 0 inactivo (borrado lógico); bit(1) | Indica el estado lógico del registro (inferido); usa DEFAULT b'1'. |
+| `avalaible_date` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | No | Cuantitativa (temporal) | avalaible_date = {fecha/hora} | avalaible_date ∈ DATETIME; default sin default | Registra desde cuándo está disponible el producto del proveedor (inferido); el valor se captura al registrar su disponibilidad. Es obligatorio y permite determinar desde qué fecha ofrecerlo. |
+| `creation_date` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP) | No | Cuantitativa (temporal) | creation_date = {fecha/hora} | creation_date ∈ DATETIME; default CURRENT_TIMESTAMP | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+| `last_update` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP) | No | Cuantitativa (temporal) | last_update = {fecha/hora} | last_update ∈ DATETIME; default CURRENT_TIMESTAMP | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+
+### `tbd_return_items`
+
+- **Total de registros:** No verificable en el respaldo. 
+- **Prefijo/tipo:** detalle/relación (tbd_). **Módulo:** envíos, devoluciones y cancelaciones (inferido).
+- **Motor/charset/collation:** InnoDB / utf8mb4 / utf8mb4_0900_ai_ci, según opciones del DDL.
+- **Descripción general detallada:**
+  - Detalla las líneas y cantidades incluidas en una devolución, junto con notas sobre su condición.
+  - Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el prefijo y el nombre del objeto).
+  - Relaciones salientes: `order_item_ID` → tbd_order_items.`ID`; `return_ID` → tb_returns.`ID`. Relaciones entrantes: ninguna FK entrante.
+  - Reglas SQL: sin CHECK; sin UNIQUE. Acciones ON DELETE/UPDATE: fk_return_items_order_item: sin acción referencial explícita; fk_return_items_return: sin acción referencial explícita. Columnas generadas: ninguna.
+  - Triggers asociados: `trg_tbd_return_items_after_insert`, `trg_tbd_return_items_after_update`, `trg_tbd_return_items_after_delete`; sus acciones de auditoría registran operación y valores NEW/OLD.
+
+**Notación formal:** `tbd_return_items = @#return_ID + @#order_item_ID + quantity + condition_notes + creation_date + last_update`
+
+**Tabla técnica de columnas**
+
+| # | Nombre | Tipo | Longitud/precisión | NULL | Default | Extras | Llave | Descripción |
+|---:|---|---|---|:---:|---|---|---|---|
+| 1 | `return_ID` | `int unsigned` | — | NO | Sin default | — | PK compuesta (return_ID, order_item_ID); FK → tb_returns.ID | Identifica o enlaza el registro con `tb_returns.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| 2 | `order_item_ID` | `int unsigned` | — | NO | Sin default | — | PK compuesta (return_ID, order_item_ID); FK → tbd_order_items.ID | Identifica o enlaza el registro con `tbd_order_items.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| 3 | `quantity` | `int unsigned` | — | NO | '1' | — | — | Registra cuántas unidades de la línea original se incluyen en la devolución; el DDL no exige quantity > 0. (inferido). |
+| 4 | `condition_notes` | `varchar(255)` | 255 | Sí | NULL | — | — | Describe la condición observada de los artículos devueltos. (inferido). |
+| 5 | `creation_date` | `datetime` | — | NO | CURRENT_TIMESTAMP | — | — | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+| 6 | `last_update` | `datetime` | — | NO | CURRENT_TIMESTAMP | ON UPDATE CURRENT_TIMESTAMP | — | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+
+**Restricciones e índices del DDL**
+
+- `PRIMARY KEY (\`return_ID\`,\`order_item_ID\`)`
+- `KEY \`fk_return_items_order_item\` (\`order_item_ID\`)`
+- `CONSTRAINT \`fk_return_items_order_item\` FOREIGN KEY (\`order_item_ID\`) REFERENCES \`tbd_order_items\` (\`ID\`)`
+- `CONSTRAINT \`fk_return_items_return\` FOREIGN KEY (\`return_ID\`) REFERENCES \`tb_returns\` (\`ID\`)`
+
+**Relaciones**
+
+- `order_item_ID` → `tbd_order_items.ID`; sin acción referencial explícita
+- `return_ID` → `tb_returns.ID`; sin acción referencial explícita
+
+**Triggers asociados:** `trg_tbd_return_items_after_insert`, `trg_tbd_return_items_after_update`, `trg_tbd_return_items_after_delete`
+
+**Tabla de clasificación de columnas**
+
+| Nombre | Valor | Origen | Obligatoriedad | Llave | Naturaleza | Composición formal | Dominio | Descripción detallada |
+|---|---|---|---|---|---|---|---|---|
+| `return_ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | PK compuesta (return_ID, order_item_ID); FK → tb_returns.ID | Cualitativa nominal | return_ID = {dígito} | return_ID ∈ {tb_returns.ID}; ON DELETE sin acción | Identifica o enlaza el registro con `tb_returns.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| `order_item_ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | PK compuesta (return_ID, order_item_ID); FK → tbd_order_items.ID | Cualitativa nominal | order_item_ID = {dígito} | order_item_ID ∈ {tbd_order_items.ID}; ON DELETE sin acción | Identifica o enlaza el registro con `tbd_order_items.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| `quantity` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT '1') | No | Cuantitativa discreta | quantity = {entero} | quantity ∈ ℤ⁺ ∪ {0}; tipo int unsigned | Registra cuántas unidades de la línea original se incluyen en la devolución; el DDL no exige quantity > 0. (inferido). |
+| `condition_notes` | Monovalor | Almacenado | Opcional (NULL); valor por sistema (DEFAULT NULL) | No | Cualitativa nominal | condition_notes = {carácter} | condition_notes ∈ cadena(≤255); tipo varchar(255) | Describe la condición observada de los artículos devueltos. (inferido). |
+| `creation_date` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP) | No | Cuantitativa (temporal) | creation_date = {fecha/hora} | creation_date ∈ DATETIME; default CURRENT_TIMESTAMP | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+| `last_update` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP) | No | Cuantitativa (temporal) | last_update = {fecha/hora} | last_update ∈ DATETIME; default CURRENT_TIMESTAMP | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+
+### `tbd_user_payment_methods`
+
+- **Total de registros:** No verificable en el respaldo. 
+- **Prefijo/tipo:** detalle/relación (tbd_). **Módulo:** usuarios (inferido).
+- **Motor/charset/collation:** InnoDB / utf8mb4 / utf8mb4_0900_ai_ci, según opciones del DDL.
+- **Descripción general detallada:**
+  - Vincula usuarios con referencias de métodos de pago administradas por proveedores externos.
+  - Pertenece al módulo de usuarios (inferido por el prefijo y el nombre del objeto).
+  - Relaciones salientes: `user_ID` → tb_users.`ID`; `payment_method_type_ID` → tbc_payment_methods_types.`ID`. Relaciones entrantes: tb_payments.`user_payment_method_ID`.
+  - Reglas SQL: sin CHECK; UNIQUE UNIQUE KEY `uk_provider_method` (`provider`,`provider_method_ref`). Acciones ON DELETE/UPDATE: tbd_user_payment_methods_ibfk_1: sin acción referencial explícita; tbd_user_payment_methods_ibfk_2: sin acción referencial explícita. Columnas generadas: ninguna.
+  - Triggers asociados: `trg_tbd_user_payment_methods_after_insert`, `trg_tbd_user_payment_methods_after_update`, `trg_tbd_user_payment_methods_after_delete`; sus acciones de auditoría registran operación y valores NEW/OLD.
+
+**Notación formal:** `tbd_user_payment_methods = @ID + #user_ID + #payment_method_type_ID + provider + provider_method_ref + label + last_four + is_default + status + creation_date + last_update`
+
+**Tabla técnica de columnas**
+
+| # | Nombre | Tipo | Longitud/precisión | NULL | Default | Extras | Llave | Descripción |
+|---:|---|---|---|:---:|---|---|---|---|
+| 1 | `ID` | `bigint unsigned` | — | NO | Sin default | AUTO_INCREMENT | PK | Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar. |
+| 2 | `user_ID` | `int` | — | NO | Sin default | — | FK → tb_users.ID | Identifica o enlaza el registro con `tb_users.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| 3 | `payment_method_type_ID` | `int unsigned` | — | NO | Sin default | — | FK → tbc_payment_methods_types.ID | Identifica o enlaza el registro con `tbc_payment_methods_types.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| 4 | `provider` | `varchar(60)` | 60 | NO | Sin default | — | UK | Guarda el nombre del proveedor o servicio que administra el método de pago (inferido). Es obligatorio y se aporta al vincular el método para identificar qué sistema debe procesar o consultar la referencia externa. |
+| 5 | `provider_method_ref` | `varchar(255)` | 255 | NO | Sin default | — | UK | Guarda el identificador que el proveedor asigna al método de pago del usuario (inferido), sin implicar que sea el número completo de tarjeta. Es obligatorio y se usa junto con `provider` para localizar ese método; ambos campos tienen unicidad conjunta. |
+| 6 | `label` | `varchar(100)` | 100 | Sí | NULL | — | — | Guarda una etiqueta legible para distinguir este método de pago del usuario (inferido). |
+| 7 | `last_four` | `char(4)` | 4 | Sí | NULL | — | — | Conserva los últimos cuatro caracteres de una referencia de pago para mostrarla parcialmente (inferido). |
+| 8 | `is_default` | `tinyint(1)` | 1 | NO | '0' | — | — | Indica si el método de pago se marca como preferido para el usuario, según el nombre de la columna (inferido). |
+| 9 | `status` | `bit(1)` | 1 | NO | b'1' | — | — | Indica el estado lógico del registro (inferido); usa DEFAULT b'1'. |
+| 10 | `creation_date` | `datetime` | — | NO | CURRENT_TIMESTAMP | — | — | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+| 11 | `last_update` | `datetime` | — | Sí | NULL | ON UPDATE CURRENT_TIMESTAMP | — | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto NULL. |
+
+**Restricciones e índices del DDL**
+
+- `PRIMARY KEY (\`ID\`)`
+- `UNIQUE KEY \`uk_provider_method\` (\`provider\`,\`provider_method_ref\`)`
+- `KEY \`user_ID\` (\`user_ID\`)`
+- `KEY \`payment_method_type_ID\` (\`payment_method_type_ID\`)`
+- `CONSTRAINT \`tbd_user_payment_methods_ibfk_1\` FOREIGN KEY (\`user_ID\`) REFERENCES \`tb_users\` (\`ID\`)`
+- `CONSTRAINT \`tbd_user_payment_methods_ibfk_2\` FOREIGN KEY (\`payment_method_type_ID\`) REFERENCES \`tbc_payment_methods_types\` (\`ID\`)`
+
+**Relaciones**
+
+- `user_ID` → `tb_users.ID`; sin acción referencial explícita
+- `payment_method_type_ID` → `tbc_payment_methods_types.ID`; sin acción referencial explícita
+- Referenciada por `tb_payments` mediante `user_payment_method_ID`.
+
+**Triggers asociados:** `trg_tbd_user_payment_methods_after_insert`, `trg_tbd_user_payment_methods_after_update`, `trg_tbd_user_payment_methods_after_delete`
+
+**Tabla de clasificación de columnas**
+
+| Nombre | Valor | Origen | Obligatoriedad | Llave | Naturaleza | Composición formal | Dominio | Descripción detallada |
+|---|---|---|---|---|---|---|---|---|
+| `ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor aportado por sistema (AUTO_INCREMENT) | PK | Cualitativa nominal | ID = {dígito} | ID ∈ ℤ⁺; tipo bigint unsigned; AUTO_INCREMENT | Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar. |
+| `user_ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | FK → tb_users.ID | Cualitativa nominal | user_ID = {dígito} | user_ID ∈ {tb_users.ID}; ON DELETE sin acción | Identifica o enlaza el registro con `tb_users.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| `payment_method_type_ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | FK → tbc_payment_methods_types.ID | Cualitativa nominal | payment_method_type_ID = {dígito} | payment_method_type_ID ∈ {tbc_payment_methods_types.ID}; ON DELETE sin acción | Identifica o enlaza el registro con `tbc_payment_methods_types.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada. |
+| `provider` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | UK | Cualitativa nominal | provider = {carácter} | provider ∈ cadena(≤60); tipo varchar(60) | Guarda el nombre del proveedor o servicio que administra el método de pago (inferido). Es obligatorio y se aporta al vincular el método para identificar qué sistema debe procesar o consultar la referencia externa. |
+| `provider_method_ref` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | UK | Cualitativa nominal | provider_method_ref = {carácter} | provider_method_ref ∈ cadena(≤255); tipo varchar(255) | Guarda el identificador que el proveedor asigna al método de pago del usuario (inferido), sin implicar que sea el número completo de tarjeta. Es obligatorio y se usa junto con `provider` para localizar ese método; ambos campos tienen unicidad conjunta. |
+| `label` | Monovalor | Almacenado | Opcional (NULL); valor por sistema (DEFAULT NULL) | No | Cualitativa nominal | label = {carácter} | label ∈ cadena(≤100); tipo varchar(100) | Guarda una etiqueta legible para distinguir este método de pago del usuario (inferido). |
+| `last_four` | Monovalor | Almacenado | Opcional (NULL); valor por sistema (DEFAULT NULL) | No | Cualitativa nominal | last_four = {carácter alfanumérico} | last_four ∈ cadena(≤4); tipo char(4) | Conserva los últimos cuatro caracteres de una referencia de pago para mostrarla parcialmente (inferido). |
+| `is_default` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT '0') | No | Cualitativa nominal | is_default = {entero} | is_default ∈ ℤ; tipo tinyint(1) | Indica si el método de pago se marca como preferido para el usuario, según el nombre de la columna (inferido). |
+| `status` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT b'1') | No | Cualitativa nominal | status = {0 \| 1} | status ∈ {0,1}; 1 activo, 0 inactivo (borrado lógico); bit(1) | Indica el estado lógico del registro (inferido); usa DEFAULT b'1'. |
+| `creation_date` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP) | No | Cuantitativa (temporal) | creation_date = {fecha/hora} | creation_date ∈ DATETIME; default CURRENT_TIMESTAMP | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
+| `last_update` | Monovalor | Almacenado | Opcional (NULL); valor por sistema (DEFAULT NULL) | No | Cuantitativa (temporal) | last_update = {fecha/hora} | last_update ∈ DATETIME; default NULL | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto NULL. |
 
 ## Vistas
 
@@ -1509,12 +1545,6 @@
 - **Propósito:** presenta trazabilidad de usuarios creados mediante la consulta definida en SQL (inferido).
 - **Tablas base:** `mysql`, `tb_users`.
 - **Columnas expuestas:** `nickname` (tipo derivado de expresión; origen en SELECT), `email` (tipo derivado de expresión; origen en SELECT), `inserted_by` (tipo derivado de expresión; origen en SELECT), `roles` (tipo derivado de expresión; origen en SELECT), `operation_description` (tipo derivado de expresión; origen en SELECT), `operation_date` (tipo derivado de expresión; origen en SELECT).
-
-### `vw_trazabilidad_usuarios_wishlist_productos`
-
-- **Propósito:** presenta trazabilidad de usuarios wishlist productos mediante la consulta definida en SQL (inferido).
-- **Tablas base:** `tb_logs`, `tbd_users_wishlist_products`.
-- **Columnas expuestas:** `log_id` (tipo derivado de expresión; origen en SELECT), `operation` (tipo derivado de expresión; origen en SELECT), `inserted_by` (tipo derivado de expresión; origen en SELECT), `operation_description` (tipo derivado de expresión; origen en SELECT), `operation_date` (tipo derivado de expresión; origen en SELECT).
 
 ## Triggers
 
@@ -1718,9 +1748,6 @@
 | `trg_tbd_user_payment_methods_after_insert` | `tbd_user_payment_methods` | INSERT | AFTER | table_name, operation, db_user, operation_date, description, operation_status; description: `Método de pago de usuario creado.  ID= , user_ID= NULL , payment_method_type_ID= NULL , provider= NULL , label= NULL , last_four= NULL , is_default= NULL , status= NULL` (valores dinámicos NEW/OLD según operación). |
 | `trg_tbd_user_payment_methods_after_update` | `tbd_user_payment_methods` | UPDATE | AFTER | table_name, operation, db_user, operation_date, description, operation_status; description: `Método de pago de usuario actualizado.  ID= . Cambios:  ,  user_ID: [ NULL ] -> [ NULL ] payment_method_type_ID: [ NULL ] -> [ NULL ] provider: [ NULL ] -> [ NULL ] label: [ NULL ] -> [ NULL ] last_four: [ NULL ] -> [ NULL ] is_default: [ NULL ] -> [ NULL ] status: [ NULL ] -> [ NULL ]` (valores dinámicos NEW/OLD según operación). |
 | `trg_tbd_user_payment_methods_after_delete` | `tbd_user_payment_methods` | DELETE | AFTER | table_name, operation, db_user, operation_date, description, operation_status; description: `Método de pago de usuario eliminado.  ID= , user_ID= NULL , payment_method_type_ID= NULL , provider= NULL , label= NULL , last_four= NULL , is_default= NULL , status= NULL` (valores dinámicos NEW/OLD según operación). |
-| `trg_tbd_users_wishlist_products_after_insert` | `tbd_users_wishlist_products` | INSERT | AFTER | table_name, operation, db_user, operation_date, description, operation_status; description: `Producto en lista de deseos creado.  user_ID= , product_ID= , status= NULL` (valores dinámicos NEW/OLD según operación). |
-| `trg_tbd_users_wishlist_products_after_update` | `tbd_users_wishlist_products` | UPDATE | AFTER | table_name, operation, db_user, operation_date, description, operation_status; description: `Producto en lista de deseos actualizado.  user_ID= , product_ID= . Cambios:  ,  status: [ NULL ] -> [ NULL ]` (valores dinámicos NEW/OLD según operación). |
-| `trg_tbd_users_wishlist_products_after_delete` | `tbd_users_wishlist_products` | DELETE | AFTER | table_name, operation, db_user, operation_date, description, operation_status; description: `Producto en lista de deseos eliminado.  user_ID= , product_ID= , status= NULL` (valores dinámicos NEW/OLD según operación). |
 
 ## Procedimientos
 
@@ -1901,10 +1928,11 @@
 - `enum('Pending','Processed','Rejected')` — `tb_refunds.refund_status`
 - `enum('Requested','Approved','Rejected','Received','Refunded')` — `tb_returns.return_status`
 - `enum('Preparing','Shipped','In transit','Delivered','Returned')` — `tb_shipments.shipment_status`
+- `enum('Owner','Reseller','Distributor')` — `tbd_products_users_providers.type_ownership`
 
 ### status
 
-- `bit`: `tb_users.status (bit(1))`, `tbc_categories.status (bit(1))`, `tbc_gen_country_profile.status (bit(1))`, `tbc_payment_methods.status (bit(1))`, `tbc_payment_methods_types.status (bit(1))`, `tbd_products_categories.status (bit(1))`, `tb_buyer_orders.status (bit(1))`, `tb_carts.status (bit(1))`, `tb_user_addresses.status (bit(1))`, `tbd_address_components.status (bit(1))`.
+- `bit`: `tb_users.status (bit(1))`, `tbc_categories.status (bit(1))`, `tbc_payment_methods.status (bit(1))`, `tbc_payment_methods_types.status (bit(1))`, `tbd_products_categories.status (bit(1))`, `tb_buyer_orders.status (bit(1))`, `tb_carts.status (bit(1))`, `tb_user_addresses.status (bit(1))`, `tbd_address_components.status (bit(1))`, `tbd_products_users_providers.status (bit(1))`, `tbd_user_payment_methods.status (bit(1))`.
 - `tinyint`: `tb_products.status (tinyint)`.
 
 ## Convenciones de nombres
@@ -1940,25 +1968,25 @@
 
 ## Resumen estadístico
 
-- Columnas clasificadas: 184.
-- llave:FK: 32.
-- llave:PK: 29.
-- llave:UK: 14.
-- naturaleza:Cualitativa nominal: 115.
+- Columnas clasificadas: 194.
+- llave:FK: 36.
+- llave:PK: 31.
+- llave:UK: 11.
+- naturaleza:Cualitativa nominal: 117.
 - naturaleza:Cualitativa ordinal: 8.
-- naturaleza:Cuantitativa (temporal): 46.
+- naturaleza:Cuantitativa (temporal): 53.
 - naturaleza:Cuantitativa continua: 11.
-- naturaleza:Cuantitativa discreta: 4.
-- obligatoriedad:Obligatorio: 143.
-- obligatoriedad:Opcional: 41.
-- origen:Almacenado: 183.
+- naturaleza:Cuantitativa discreta: 5.
+- obligatoriedad:Obligatorio: 148.
+- obligatoriedad:Opcional: 46.
+- origen:Almacenado: 193.
 - origen:Derivado: 1.
 
 ## Volumen de datos
 
-Estructura y totales de registros obtenidos del respaldo BD19.sql (fecha del archivo: 2026-11-04 18:11:43 -06:00). Conteo de registros realizado el: 2026-11-04 18:44:17 -06:00. Los totales corresponden al respaldo, no a la instancia en vivo.
-- Conteo de registros realizado el: 2026-11-04 18:44:17 -06:00. Los valores son conteos de filas INSERT del respaldo BD19.sql, no de la instancia en vivo.
-- Total verificable: 106,834 registros en 11 tablas; 14 tablas sin INSERT no son verificables en el respaldo.
+Estructura y totales de registros obtenidos del respaldo BD19.sql (fecha del archivo: 2026-11-04 18:11:43 -06:00). Conteo de registros realizado el: 2026-11-05 10:48:03 -06:00. Los totales corresponden al respaldo, no a la instancia en vivo.
+- Conteo de registros realizado el: 2026-11-05 10:48:03 -06:00. Los valores son conteos de filas INSERT del respaldo BD19.sql, no de la instancia en vivo.
+- Total verificable: 106,834 registros en 8 tablas; 17 tablas sin INSERT no son verificables en el respaldo.
 
 | Tabla | Registros | Porcentaje del total verificable |
 |---|---:|---:|
@@ -1967,10 +1995,7 @@ Estructura y totales de registros obtenidos del respaldo BD19.sql (fecha del arc
 | `tb_users` | 10227 | 9.57% |
 | `tb_people` | 10225 | 9.57% |
 | `tbd_products_categories` | 5000 | 4.68% |
-| `tbc_gen_given_names` | 344 | 0.32% |
-| `tbc_gen_family_names` | 225 | 0.21% |
 | `tbc_categories` | 160 | 0.15% |
-| `tbc_gen_country_profile` | 12 | 0.01% |
 | `tbc_payment_methods` | 1 | 0.00% |
 | `tbc_payment_methods_types` | 1 | 0.00% |
 | `tb_buyer_orders` | No verificable en el respaldo | — |
@@ -1987,13 +2012,16 @@ Estructura y totales de registros obtenidos del respaldo BD19.sql (fecha del arc
 | `tbd_cancellation_items` | No verificable en el respaldo | — |
 | `tbd_carts_items` | No verificable en el respaldo | — |
 | `tbd_order_items` | No verificable en el respaldo | — |
+| `tbd_products_users_providers` | No verificable en el respaldo | — |
+| `tbd_return_items` | No verificable en el respaldo | — |
+| `tbd_user_payment_methods` | No verificable en el respaldo | — |
 | **Total verificable** | **106834** | **100.00%** |
 
 ## Historial de cambios
 
 - Fuente actualizada a BD19 (`Practica03/backups/BD19.sql`), versión MySQL 8.0.45.
 - Esquema completo BD19: 29 tablas, 25 vistas, 75 triggers, 8 procedimientos, 15 funciones, 213 columnas y 38 FK.
-- Este diccionario documenta 25 tablas, 25 vistas y 75 triggers. Selección: todas las tablas con filas verificables primero (11), luego tablas sin filas verificables hasta completar 25.
+- Este diccionario contiene 25 tablas: `tb_logs` y 24 tablas auditadas; entre las auditadas se priorizaron las pobladas. Los catálogos `tbc_gen_*` poblados se omiten porque no tienen vistas ni triggers.
 
 ## Descripciones marcadas (inferido)
 
@@ -2035,21 +2063,6 @@ Estructura y totales de registros obtenidos del respaldo BD19.sql (fecha del arc
 - Columna `tbc_categories.status`: interpretación funcional o aporte inferido.
 - Columna `tbc_categories.creation_date`: interpretación funcional o aporte inferido.
 - Columna `tbc_categories.last_update`: interpretación funcional o aporte inferido.
-- Tabla `tbc_gen_country_profile`: descripción de propósito/módulo inferida de nombres y relaciones.
-- Columna `tbc_gen_country_profile.country_code`: interpretación funcional o aporte inferido.
-- Columna `tbc_gen_country_profile.country_name`: interpretación funcional o aporte inferido.
-- Columna `tbc_gen_country_profile.phone_prefix`: interpretación funcional o aporte inferido.
-- Columna `tbc_gen_country_profile.phone_digits`: interpretación funcional o aporte inferido.
-- Columna `tbc_gen_country_profile.title_male`: interpretación funcional o aporte inferido.
-- Columna `tbc_gen_country_profile.title_female`: interpretación funcional o aporte inferido.
-- Columna `tbc_gen_country_profile.status`: interpretación funcional o aporte inferido.
-- Tabla `tbc_gen_family_names`: descripción de propósito/módulo inferida de nombres y relaciones.
-- Columna `tbc_gen_family_names.country_code`: interpretación funcional o aporte inferido.
-- Columna `tbc_gen_family_names.name`: interpretación funcional o aporte inferido.
-- Tabla `tbc_gen_given_names`: descripción de propósito/módulo inferida de nombres y relaciones.
-- Columna `tbc_gen_given_names.country_code`: interpretación funcional o aporte inferido.
-- Columna `tbc_gen_given_names.gender_ID`: interpretación funcional o aporte inferido.
-- Columna `tbc_gen_given_names.name`: interpretación funcional o aporte inferido.
 - Tabla `tbc_payment_methods`: descripción de propósito/módulo inferida de nombres y relaciones.
 - Columna `tbc_payment_methods.name`: interpretación funcional o aporte inferido.
 - Columna `tbc_payment_methods.description`: interpretación funcional o aporte inferido.
@@ -2171,6 +2184,32 @@ Estructura y totales de registros obtenidos del respaldo BD19.sql (fecha del arc
 - Columna `tbd_order_items.unit_price`: interpretación funcional o aporte inferido.
 - Columna `tbd_order_items.subtotal`: interpretación funcional o aporte inferido.
 - Columna `tbd_order_items.creation_date`: interpretación funcional o aporte inferido.
+- Tabla `tbd_products_users_providers`: descripción de propósito/módulo inferida de nombres y relaciones.
+- Columna `tbd_products_users_providers.user_ID`: interpretación funcional o aporte inferido.
+- Columna `tbd_products_users_providers.product_ID`: interpretación funcional o aporte inferido.
+- Columna `tbd_products_users_providers.type_ownership`: interpretación funcional o aporte inferido.
+- Columna `tbd_products_users_providers.status`: interpretación funcional o aporte inferido.
+- Columna `tbd_products_users_providers.avalaible_date`: interpretación funcional o aporte inferido.
+- Columna `tbd_products_users_providers.creation_date`: interpretación funcional o aporte inferido.
+- Columna `tbd_products_users_providers.last_update`: interpretación funcional o aporte inferido.
+- Tabla `tbd_return_items`: descripción de propósito/módulo inferida de nombres y relaciones.
+- Columna `tbd_return_items.return_ID`: interpretación funcional o aporte inferido.
+- Columna `tbd_return_items.order_item_ID`: interpretación funcional o aporte inferido.
+- Columna `tbd_return_items.quantity`: interpretación funcional o aporte inferido.
+- Columna `tbd_return_items.condition_notes`: interpretación funcional o aporte inferido.
+- Columna `tbd_return_items.creation_date`: interpretación funcional o aporte inferido.
+- Columna `tbd_return_items.last_update`: interpretación funcional o aporte inferido.
+- Tabla `tbd_user_payment_methods`: descripción de propósito/módulo inferida de nombres y relaciones.
+- Columna `tbd_user_payment_methods.user_ID`: interpretación funcional o aporte inferido.
+- Columna `tbd_user_payment_methods.payment_method_type_ID`: interpretación funcional o aporte inferido.
+- Columna `tbd_user_payment_methods.provider`: interpretación funcional o aporte inferido.
+- Columna `tbd_user_payment_methods.provider_method_ref`: interpretación funcional o aporte inferido.
+- Columna `tbd_user_payment_methods.label`: interpretación funcional o aporte inferido.
+- Columna `tbd_user_payment_methods.last_four`: interpretación funcional o aporte inferido.
+- Columna `tbd_user_payment_methods.is_default`: interpretación funcional o aporte inferido.
+- Columna `tbd_user_payment_methods.status`: interpretación funcional o aporte inferido.
+- Columna `tbd_user_payment_methods.creation_date`: interpretación funcional o aporte inferido.
+- Columna `tbd_user_payment_methods.last_update`: interpretación funcional o aporte inferido.
 
 ## Pendientes por confirmar — inferencias
 

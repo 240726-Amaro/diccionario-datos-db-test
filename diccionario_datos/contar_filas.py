@@ -77,9 +77,20 @@ for obj in data.get("objects", []):
     if obj.get("kind") == "table": counts.setdefault(obj["name"], "No verificable en el respaldo")
 data["row_counts"] = counts
 table_order = [obj["name"] for obj in data.get("objects", []) if obj.get("kind") == "table"]
-populated = [name for name in table_order if isinstance(counts.get(name), int) and counts[name] > 0]
-empty = [name for name in table_order if name not in populated]
-data["dictionary_tables"] = (populated + empty)[:25]
+trigger_targets = {
+    match.group(1)
+    for obj in data.get("objects", []) if obj.get("kind") == "trigger"
+    for match in [re.search(r"\bON\s+`([^`]+)`", obj.get("sql", ""), re.I)]
+    if match
+}
+audited = [name for name in table_order if name in trigger_targets]
+populated_audited = [name for name in audited if isinstance(counts.get(name), int) and counts[name] > 0]
+empty_audited = [name for name in audited if name not in populated_audited]
+logs = [name for name in table_order if name == "tb_logs"]
+selected = set(populated_audited + empty_audited[:max(0, 24-len(populated_audited))] + logs)
+data["dictionary_tables"] = [
+    name for name in table_order if name in selected and isinstance(counts.get(name), int) and counts[name] > 0
+] + [name for name in table_order if name in selected and not (isinstance(counts.get(name), int) and counts[name] > 0)]
 counted_at = local_stamp(datetime.now().astimezone())
 data["row_counted_at"] = counted_at
 data["row_count_source"] = f"Conteo streaming de filas reales en sentencias INSERT de BD19.sql; {counted_at}; corresponde al respaldo, no a la instancia en vivo."

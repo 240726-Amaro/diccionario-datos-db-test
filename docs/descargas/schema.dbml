@@ -48,26 +48,6 @@ Table tbc_categories {
   creation_date datetime
   last_update datetime
 }
-Table tbc_gen_country_profile {
-  country_code char(2) [pk]
-  country_name varchar(60)
-  phone_prefix varchar(6)
-  phone_digits tinyint
-  title_male varchar(10)
-  title_female varchar(10)
-  status bit(1)
-}
-Table tbc_gen_family_names {
-  ID int [pk]
-  country_code char(2)
-  name varchar(60)
-}
-Table tbc_gen_given_names {
-  ID int [pk]
-  country_code char(2)
-  gender_ID tinyint unsigned
-  name varchar(60)
-}
 Table tbc_payment_methods {
   ID int unsigned [pk]
   name varchar(100)
@@ -232,10 +212,38 @@ Table tbd_order_items {
   subtotal decimal(12,2)
   creation_date datetime
 }
+Table tbd_products_users_providers {
+  user_ID int [pk]
+  product_ID int unsigned [pk]
+  type_ownership enum('Owner','Reseller','Distributor')
+  status bit(1)
+  avalaible_date datetime
+  creation_date datetime
+  last_update datetime
+}
+Table tbd_return_items {
+  return_ID int unsigned [pk]
+  order_item_ID int unsigned [pk]
+  quantity int unsigned
+  condition_notes varchar(255)
+  creation_date datetime
+  last_update datetime
+}
+Table tbd_user_payment_methods {
+  ID bigint unsigned [pk]
+  user_ID int
+  payment_method_type_ID int unsigned
+  provider varchar(60)
+  provider_method_ref varchar(255)
+  label varchar(100)
+  last_four char(4)
+  is_default tinyint(1)
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
 Ref: tb_people.user_ID > tb_users.ID // fk_people_user 
 Ref: tbc_categories.sup_id_category > tbc_categories.ID // fk_superior_category 
-Ref: tbc_gen_family_names.country_code > tbc_gen_country_profile.country_code // fk_gen_family_country 
-Ref: tbc_gen_given_names.country_code > tbc_gen_country_profile.country_code // fk_gen_given_country 
 Ref: tbd_products_categories.product_ID > tb_products.ID // fk_product 
 Ref: tb_buyer_orders.seller_ID > tb_users.ID // fk_seller_orders_seller 
 Ref: tb_carts.user_ID > tb_users.ID // fk_carts_user 
@@ -262,3 +270,9 @@ Ref: tbd_carts_items.cart_ID > tb_carts.ID // fk_cart_items_cart
 Ref: (tbd_carts_items.provider_ID, tbd_carts_items.product_ID) > (tbd_products_users_providers.user_ID, tbd_products_users_providers.product_ID) // fk_cart_items_provider_product 
 Ref: tbd_order_items.buyer_order_ID > tb_buyer_orders.ID // fk_order_items_buyer_order 
 Ref: (tbd_order_items.provider_ID, tbd_order_items.product_ID) > (tbd_products_users_providers.user_ID, tbd_products_users_providers.product_ID) // fk_order_items_provider_product 
+Ref: tbd_products_users_providers.product_ID > tb_products.ID // fk_products2 
+Ref: tbd_products_users_providers.user_ID > tb_users.ID // fk_user1 
+Ref: tbd_return_items.order_item_ID > tbd_order_items.ID // fk_return_items_order_item 
+Ref: tbd_return_items.return_ID > tb_returns.ID // fk_return_items_return 
+Ref: tbd_user_payment_methods.user_ID > tb_users.ID // tbd_user_payment_methods_ibfk_1 
+Ref: tbd_user_payment_methods.payment_method_type_ID > tbc_payment_methods_types.ID // tbd_user_payment_methods_ibfk_2 

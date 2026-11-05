@@ -1,6 +1,6 @@
 # Diccionario de datos de BD19
 
-Entregables generados desde el DDL extraído de `Practica03/backups/BD19.sql`: `diccionario_datos.md`, `diccionario_datos.xlsx`, `estructura.json`, `diagrama_er.mmd`, `schema.dbml` y el sitio estático `Practica03/docs`. El diccionario presenta 25 tablas (primero las 11 con filas en el respaldo y después 14 sin filas verificables), con sus vistas y triggers asociados. `estructura.json` conserva el esquema completo de 29 tablas para regenerar el diagrama Archify. No se guardan valores de filas del volcado.
+Entregables generados desde el DDL extraído de `Practica03/backups/BD19.sql`: `diccionario_datos.md`, `diccionario_datos.xlsx`, `estructura.json`, `diagrama_er.mmd`, `schema.dbml` y el sitio estático `Practica03/docs`. El diccionario contiene `tb_logs` y 24 tablas auditadas, con prioridad para las pobladas entre las auditadas; incluye sus 24 vistas y 72 triggers. Los tres catálogos poblados `tbc_gen_*` se omiten porque BD19 no les declara vistas ni triggers. `estructura.json` conserva el esquema completo de 29 tablas. No se guardan valores de filas del volcado.
 
 ## Regeneración segura
 

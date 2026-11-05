@@ -17,8 +17,8 @@ def view_is_selected(obj):
     if owners: return bool(owners & SELECTED)
     refs=set(re.findall(r'`([^`]+)`',obj['sql'])); refs.discard('tb_logs')
     return bool(refs & SELECTED)
-VIEWS = [o for o in OBJECTS if o['kind'] == 'view']
-TRIGGERS = [o for o in OBJECTS if o['kind'] == 'trigger']
+VIEWS = [o for o in OBJECTS if o['kind'] == 'view' and view_is_selected(o)]
+TRIGGERS = [o for o in OBJECTS if o['kind'] == 'trigger' and (lambda m: bool(m and m.group(1) in SELECTED))(re.search(r'\bON\s+`([^`]+)`', o['sql'], re.I))]
 PROCEDURES = [o for o in OBJECTS if o['kind'] == 'procedure']
 FUNCTIONS = [o for o in OBJECTS if o['kind'] == 'function']
 

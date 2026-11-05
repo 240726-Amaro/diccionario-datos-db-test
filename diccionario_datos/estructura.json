@@ -1495,7 +1495,7 @@
           }
         }
       ],
-      "description_detailed": "Mantiene el catálogo de productos con SKU, descripción, precio vigente, existencias y estado de publicación. Pertenece al módulo de productos (inferido por el nombre). Se relaciona con `tbd_products_categories`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `SKU` (`SKU`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_productos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_products_after_insert, trg_products_after_update, trg_products_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Mantiene el catálogo de productos con SKU, descripción, precio vigente, existencias y estado de publicación. Pertenece al módulo de productos (inferido por el nombre). Se relaciona con `tbd_products_categories`, `tbd_products_users_providers`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `SKU` (`SKU`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_productos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_products_after_insert, trg_products_after_update, trg_products_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_products = @ID + SKU + name + description + current_price + current_stock + status + creation_date + last_update"
     },
     {
@@ -1867,7 +1867,7 @@
           }
         }
       ],
-      "description_detailed": "Representa solicitudes de devolución asociadas a una orden de comprador y su estado de atención. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tb_users`, `tb_refunds`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_devoluciones; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_returns_after_insert, trg_tb_returns_after_update, trg_tb_returns_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Representa solicitudes de devolución asociadas a una orden de comprador y su estado de atención. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tb_users`, `tb_refunds`, `tbd_return_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_devoluciones; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_returns_after_insert, trg_tb_returns_after_update, trg_tb_returns_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_returns = @ID + #buyer_order_ID + #user_ID + reason + return_status + request_date + creation_date + last_update"
     },
     {
@@ -2479,7 +2479,7 @@
           }
         }
       ],
-      "description_detailed": "Representa cuentas de acceso con correo, alias, hash de contraseña, fechas de actividad y estado. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_people`, `tb_buyer_orders`, `tb_carts`, `tb_order_cancellations`, `tb_orders`, `tb_returns`, `tb_user_addresses`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `email` (`email`); UNIQUE KEY `nickname` (`nickname`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_usuarios_creados; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_users_after_insert, trg_users_after_update, trg_users_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Representa cuentas de acceso con correo, alias, hash de contraseña, fechas de actividad y estado. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_people`, `tb_buyer_orders`, `tb_carts`, `tb_order_cancellations`, `tb_orders`, `tb_returns`, `tb_user_addresses`, `tbd_products_users_providers`, `tbd_user_payment_methods`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `email` (`email`); UNIQUE KEY `nickname` (`nickname`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_usuarios_creados; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_users_after_insert, trg_users_after_update, trg_users_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_users = @ID + email + nickname + password + creation_date + last_login + status"
     },
     {
@@ -3154,7 +3154,7 @@
           }
         }
       ],
-      "description_detailed": "Define tipos codificados que clasifican métodos de pago de usuarios. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con no declara relaciones FK; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `code_UNIQUE` (`code`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_tipos_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbc_payment_methods_types_after_insert, trg_tbc_payment_methods_types_after_update, trg_tbc_payment_methods_types_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Define tipos codificados que clasifican métodos de pago de usuarios. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tbd_user_payment_methods`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `code_UNIQUE` (`code`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_tipos_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbc_payment_methods_types_after_insert, trg_tbc_payment_methods_types_after_update, trg_tbc_payment_methods_types_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbc_payment_methods_types = @ID + code + description + status + creation_date + last_update"
     },
     {
@@ -3736,7 +3736,7 @@
           }
         }
       ],
-      "description_detailed": "Conserva las líneas de las órdenes de comprador con nombre histórico, cantidad, precio unitario e importe. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tbd_products_users_providers`, `tbd_cancellation_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`quantity` > 0)); ((`unit_price` >= 0)); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas subtotal. Vistas asociadas: vw_trazabilidad_items_orden_comprador; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_order_items_after_insert, trg_tbd_order_items_after_update, trg_tbd_order_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Conserva las líneas de las órdenes de comprador con nombre histórico, cantidad, precio unitario e importe. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tbd_products_users_providers`, `tbd_cancellation_items`, `tbd_return_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`quantity` > 0)); ((`unit_price` >= 0)); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas subtotal. Vistas asociadas: vw_trazabilidad_items_orden_comprador; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_order_items_after_insert, trg_tbd_order_items_after_update, trg_tbd_order_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbd_order_items = @ID + #buyer_order_ID + #product_ID + #provider_ID + product_name + quantity + unit_price + subtotal + creation_date"
     },
     {
@@ -3871,7 +3871,137 @@
     {
       "kind": "table",
       "name": "tbd_products_users_providers",
-      "sql": "CREATE TABLE `tbd_products_users_providers` (\n  `user_ID` int NOT NULL,\n  `product_ID` int unsigned NOT NULL,\n  `type_ownership` enum('Owner','Reseller','Distributor') DEFAULT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `avalaible_date` datetime NOT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`user_ID`,`product_ID`),\n  KEY `fk_products2` (`product_ID`),\n  CONSTRAINT `fk_products2` FOREIGN KEY (`product_ID`) REFERENCES `tb_products` (`ID`),\n  CONSTRAINT `fk_user1` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n"
+      "sql": "CREATE TABLE `tbd_products_users_providers` (\n  `user_ID` int NOT NULL,\n  `product_ID` int unsigned NOT NULL,\n  `type_ownership` enum('Owner','Reseller','Distributor') DEFAULT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `avalaible_date` datetime NOT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`user_ID`,`product_ID`),\n  KEY `fk_products2` (`product_ID`),\n  CONSTRAINT `fk_products2` FOREIGN KEY (`product_ID`) REFERENCES `tb_products` (`ID`),\n  CONSTRAINT `fk_user1` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "columns": [
+        {
+          "name": "user_ID",
+          "type": "int",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "PK compuesta (user_ID, product_ID); FK → tb_users.ID",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "PK compuesta (user_ID, product_ID); FK → tb_users.ID",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "user_ID = {dígito}",
+            "dominio": "user_ID ∈ {tb_users.ID}; ON DELETE sin acción",
+            "descripcion_detallada": "Identifica o enlaza el registro con `tb_users.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
+          }
+        },
+        {
+          "name": "product_ID",
+          "type": "int unsigned",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "PK compuesta (user_ID, product_ID); FK → tb_products.ID",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "PK compuesta (user_ID, product_ID); FK → tb_products.ID",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "product_ID = {dígito}",
+            "dominio": "product_ID ∈ {tb_products.ID}; ON DELETE sin acción",
+            "descripcion_detallada": "Identifica o enlaza el registro con `tb_products.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
+          }
+        },
+        {
+          "name": "type_ownership",
+          "type": "enum('Owner','Reseller','Distributor')",
+          "nullable": "Sí",
+          "default": "NULL",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Opcional (NULL); valor por sistema (DEFAULT NULL)",
+            "llave": "No",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "type_ownership = [ Owner | Reseller | Distributor ]",
+            "dominio": "type_ownership ∈ {Owner, Reseller, Distributor}; tipo enum('Owner','Reseller','Distributor')",
+            "descripcion_detallada": "Clasifica la relación del usuario con el producto mediante Owner, Reseller o Distributor. Es opcional porque DEFAULT NULL permite registrar la relación sin asignar todavía un tipo; se usa para distinguir la función del proveedor (inferido)."
+          }
+        },
+        {
+          "name": "status",
+          "type": "bit(1)",
+          "nullable": "NO",
+          "default": "b'1'",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT b'1')",
+            "llave": "No",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "status = {0 | 1}",
+            "dominio": "status ∈ {0,1}; 1 activo, 0 inactivo (borrado lógico); bit(1)",
+            "descripcion_detallada": "Indica el estado lógico del registro (inferido); usa DEFAULT b'1'."
+          }
+        },
+        {
+          "name": "avalaible_date",
+          "type": "datetime",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "No",
+            "naturaleza": "Cuantitativa (temporal)",
+            "composicion_formal": "avalaible_date = {fecha/hora}",
+            "dominio": "avalaible_date ∈ DATETIME; default sin default",
+            "descripcion_detallada": "Registra desde cuándo está disponible el producto del proveedor (inferido); el valor se captura al registrar su disponibilidad. Es obligatorio y permite determinar desde qué fecha ofrecerlo."
+          }
+        },
+        {
+          "name": "creation_date",
+          "type": "datetime",
+          "nullable": "NO",
+          "default": "CURRENT_TIMESTAMP",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP)",
+            "llave": "No",
+            "naturaleza": "Cuantitativa (temporal)",
+            "composicion_formal": "creation_date = {fecha/hora}",
+            "dominio": "creation_date ∈ DATETIME; default CURRENT_TIMESTAMP",
+            "descripcion_detallada": "Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP."
+          }
+        },
+        {
+          "name": "last_update",
+          "type": "datetime",
+          "nullable": "NO",
+          "default": "CURRENT_TIMESTAMP",
+          "extra": "ON UPDATE CURRENT_TIMESTAMP",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP)",
+            "llave": "No",
+            "naturaleza": "Cuantitativa (temporal)",
+            "composicion_formal": "last_update = {fecha/hora}",
+            "dominio": "last_update ∈ DATETIME; default CURRENT_TIMESTAMP",
+            "descripcion_detallada": "Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP."
+          }
+        }
+      ],
+      "description_detailed": "Asocia productos con usuarios que actúan como propietarios o proveedores. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_products`, `tb_users`, `tbd_carts_items`, `tbd_order_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_proveedores_productos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_products_users_providers_after_insert, trg_tbd_products_users_providers_after_update, trg_tbd_products_users_providers_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "formal_notation": "tbd_products_users_providers = @#user_ID + @#product_ID + type_ownership + status + avalaible_date + creation_date + last_update"
     },
     {
       "kind": "trigger",
@@ -3891,7 +4021,119 @@
     {
       "kind": "table",
       "name": "tbd_return_items",
-      "sql": "CREATE TABLE `tbd_return_items` (\n  `return_ID` int unsigned NOT NULL,\n  `order_item_ID` int unsigned NOT NULL,\n  `quantity` int unsigned NOT NULL DEFAULT '1',\n  `condition_notes` varchar(255) DEFAULT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`return_ID`,`order_item_ID`),\n  KEY `fk_return_items_order_item` (`order_item_ID`),\n  CONSTRAINT `fk_return_items_order_item` FOREIGN KEY (`order_item_ID`) REFERENCES `tbd_order_items` (`ID`),\n  CONSTRAINT `fk_return_items_return` FOREIGN KEY (`return_ID`) REFERENCES `tb_returns` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n"
+      "sql": "CREATE TABLE `tbd_return_items` (\n  `return_ID` int unsigned NOT NULL,\n  `order_item_ID` int unsigned NOT NULL,\n  `quantity` int unsigned NOT NULL DEFAULT '1',\n  `condition_notes` varchar(255) DEFAULT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`return_ID`,`order_item_ID`),\n  KEY `fk_return_items_order_item` (`order_item_ID`),\n  CONSTRAINT `fk_return_items_order_item` FOREIGN KEY (`order_item_ID`) REFERENCES `tbd_order_items` (`ID`),\n  CONSTRAINT `fk_return_items_return` FOREIGN KEY (`return_ID`) REFERENCES `tb_returns` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "columns": [
+        {
+          "name": "return_ID",
+          "type": "int unsigned",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "PK compuesta (return_ID, order_item_ID); FK → tb_returns.ID",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "PK compuesta (return_ID, order_item_ID); FK → tb_returns.ID",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "return_ID = {dígito}",
+            "dominio": "return_ID ∈ {tb_returns.ID}; ON DELETE sin acción",
+            "descripcion_detallada": "Identifica o enlaza el registro con `tb_returns.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
+          }
+        },
+        {
+          "name": "order_item_ID",
+          "type": "int unsigned",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "PK compuesta (return_ID, order_item_ID); FK → tbd_order_items.ID",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "PK compuesta (return_ID, order_item_ID); FK → tbd_order_items.ID",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "order_item_ID = {dígito}",
+            "dominio": "order_item_ID ∈ {tbd_order_items.ID}; ON DELETE sin acción",
+            "descripcion_detallada": "Identifica o enlaza el registro con `tbd_order_items.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
+          }
+        },
+        {
+          "name": "quantity",
+          "type": "int unsigned",
+          "nullable": "NO",
+          "default": "'1'",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT '1')",
+            "llave": "No",
+            "naturaleza": "Cuantitativa discreta",
+            "composicion_formal": "quantity = {entero}",
+            "dominio": "quantity ∈ ℤ⁺ ∪ {0}; tipo int unsigned",
+            "descripcion_detallada": "Registra cuántas unidades de la línea original se incluyen en la devolución; el DDL no exige quantity > 0. (inferido)."
+          }
+        },
+        {
+          "name": "condition_notes",
+          "type": "varchar(255)",
+          "nullable": "Sí",
+          "default": "NULL",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Opcional (NULL); valor por sistema (DEFAULT NULL)",
+            "llave": "No",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "condition_notes = {carácter}",
+            "dominio": "condition_notes ∈ cadena(≤255); tipo varchar(255)",
+            "descripcion_detallada": "Describe la condición observada de los artículos devueltos. (inferido)."
+          }
+        },
+        {
+          "name": "creation_date",
+          "type": "datetime",
+          "nullable": "NO",
+          "default": "CURRENT_TIMESTAMP",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP)",
+            "llave": "No",
+            "naturaleza": "Cuantitativa (temporal)",
+            "composicion_formal": "creation_date = {fecha/hora}",
+            "dominio": "creation_date ∈ DATETIME; default CURRENT_TIMESTAMP",
+            "descripcion_detallada": "Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP."
+          }
+        },
+        {
+          "name": "last_update",
+          "type": "datetime",
+          "nullable": "NO",
+          "default": "CURRENT_TIMESTAMP",
+          "extra": "ON UPDATE CURRENT_TIMESTAMP",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP)",
+            "llave": "No",
+            "naturaleza": "Cuantitativa (temporal)",
+            "composicion_formal": "last_update = {fecha/hora}",
+            "dominio": "last_update ∈ DATETIME; default CURRENT_TIMESTAMP",
+            "descripcion_detallada": "Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP."
+          }
+        }
+      ],
+      "description_detailed": "Detalla las líneas y cantidades incluidas en una devolución, junto con notas sobre su condición. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tbd_order_items`, `tb_returns`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_detalle_devoluciones; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_return_items_after_insert, trg_tbd_return_items_after_update, trg_tbd_return_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "formal_notation": "tbd_return_items = @#return_ID + @#order_item_ID + quantity + condition_notes + creation_date + last_update"
     },
     {
       "kind": "trigger",
@@ -3911,7 +4153,209 @@
     {
       "kind": "table",
       "name": "tbd_user_payment_methods",
-      "sql": "CREATE TABLE `tbd_user_payment_methods` (\n  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `user_ID` int NOT NULL,\n  `payment_method_type_ID` int unsigned NOT NULL,\n  `provider` varchar(60) NOT NULL,\n  `provider_method_ref` varchar(255) NOT NULL,\n  `label` varchar(100) DEFAULT NULL,\n  `last_four` char(4) DEFAULT NULL,\n  `is_default` tinyint(1) NOT NULL DEFAULT '0',\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_provider_method` (`provider`,`provider_method_ref`),\n  KEY `user_ID` (`user_ID`),\n  KEY `payment_method_type_ID` (`payment_method_type_ID`),\n  CONSTRAINT `tbd_user_payment_methods_ibfk_1` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`),\n  CONSTRAINT `tbd_user_payment_methods_ibfk_2` FOREIGN KEY (`payment_method_type_ID`) REFERENCES `tbc_payment_methods_types` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n"
+      "sql": "CREATE TABLE `tbd_user_payment_methods` (\n  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `user_ID` int NOT NULL,\n  `payment_method_type_ID` int unsigned NOT NULL,\n  `provider` varchar(60) NOT NULL,\n  `provider_method_ref` varchar(255) NOT NULL,\n  `label` varchar(100) DEFAULT NULL,\n  `last_four` char(4) DEFAULT NULL,\n  `is_default` tinyint(1) NOT NULL DEFAULT '0',\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_provider_method` (`provider`,`provider_method_ref`),\n  KEY `user_ID` (`user_ID`),\n  KEY `payment_method_type_ID` (`payment_method_type_ID`),\n  CONSTRAINT `tbd_user_payment_methods_ibfk_1` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`),\n  CONSTRAINT `tbd_user_payment_methods_ibfk_2` FOREIGN KEY (`payment_method_type_ID`) REFERENCES `tbc_payment_methods_types` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "columns": [
+        {
+          "name": "ID",
+          "type": "bigint unsigned",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "AUTO_INCREMENT",
+          "key": "PK",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor aportado por sistema (AUTO_INCREMENT)",
+            "llave": "PK",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "ID = {dígito}",
+            "dominio": "ID ∈ ℤ⁺; tipo bigint unsigned; AUTO_INCREMENT",
+            "descripcion_detallada": "Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar."
+          }
+        },
+        {
+          "name": "user_ID",
+          "type": "int",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "FK → tb_users.ID",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "FK → tb_users.ID",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "user_ID = {dígito}",
+            "dominio": "user_ID ∈ {tb_users.ID}; ON DELETE sin acción",
+            "descripcion_detallada": "Identifica o enlaza el registro con `tb_users.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
+          }
+        },
+        {
+          "name": "payment_method_type_ID",
+          "type": "int unsigned",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "FK → tbc_payment_methods_types.ID",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "FK → tbc_payment_methods_types.ID",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "payment_method_type_ID = {dígito}",
+            "dominio": "payment_method_type_ID ∈ {tbc_payment_methods_types.ID}; ON DELETE sin acción",
+            "descripcion_detallada": "Identifica o enlaza el registro con `tbc_payment_methods_types.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
+          }
+        },
+        {
+          "name": "provider",
+          "type": "varchar(60)",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "UK",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "UK",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "provider = {carácter}",
+            "dominio": "provider ∈ cadena(≤60); tipo varchar(60)",
+            "descripcion_detallada": "Guarda el nombre del proveedor o servicio que administra el método de pago (inferido). Es obligatorio y se aporta al vincular el método para identificar qué sistema debe procesar o consultar la referencia externa."
+          }
+        },
+        {
+          "name": "provider_method_ref",
+          "type": "varchar(255)",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "UK",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "UK",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "provider_method_ref = {carácter}",
+            "dominio": "provider_method_ref ∈ cadena(≤255); tipo varchar(255)",
+            "descripcion_detallada": "Guarda el identificador que el proveedor asigna al método de pago del usuario (inferido), sin implicar que sea el número completo de tarjeta. Es obligatorio y se usa junto con `provider` para localizar ese método; ambos campos tienen unicidad conjunta."
+          }
+        },
+        {
+          "name": "label",
+          "type": "varchar(100)",
+          "nullable": "Sí",
+          "default": "NULL",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Opcional (NULL); valor por sistema (DEFAULT NULL)",
+            "llave": "No",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "label = {carácter}",
+            "dominio": "label ∈ cadena(≤100); tipo varchar(100)",
+            "descripcion_detallada": "Guarda una etiqueta legible para distinguir este método de pago del usuario (inferido)."
+          }
+        },
+        {
+          "name": "last_four",
+          "type": "char(4)",
+          "nullable": "Sí",
+          "default": "NULL",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Opcional (NULL); valor por sistema (DEFAULT NULL)",
+            "llave": "No",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "last_four = {carácter alfanumérico}",
+            "dominio": "last_four ∈ cadena(≤4); tipo char(4)",
+            "descripcion_detallada": "Conserva los últimos cuatro caracteres de una referencia de pago para mostrarla parcialmente (inferido)."
+          }
+        },
+        {
+          "name": "is_default",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "default": "'0'",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT '0')",
+            "llave": "No",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "is_default = {entero}",
+            "dominio": "is_default ∈ ℤ; tipo tinyint(1)",
+            "descripcion_detallada": "Indica si el método de pago se marca como preferido para el usuario, según el nombre de la columna (inferido)."
+          }
+        },
+        {
+          "name": "status",
+          "type": "bit(1)",
+          "nullable": "NO",
+          "default": "b'1'",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT b'1')",
+            "llave": "No",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "status = {0 | 1}",
+            "dominio": "status ∈ {0,1}; 1 activo, 0 inactivo (borrado lógico); bit(1)",
+            "descripcion_detallada": "Indica el estado lógico del registro (inferido); usa DEFAULT b'1'."
+          }
+        },
+        {
+          "name": "creation_date",
+          "type": "datetime",
+          "nullable": "NO",
+          "default": "CURRENT_TIMESTAMP",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP)",
+            "llave": "No",
+            "naturaleza": "Cuantitativa (temporal)",
+            "composicion_formal": "creation_date = {fecha/hora}",
+            "dominio": "creation_date ∈ DATETIME; default CURRENT_TIMESTAMP",
+            "descripcion_detallada": "Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP."
+          }
+        },
+        {
+          "name": "last_update",
+          "type": "datetime",
+          "nullable": "Sí",
+          "default": "NULL",
+          "extra": "ON UPDATE CURRENT_TIMESTAMP",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Opcional (NULL); valor por sistema (DEFAULT NULL)",
+            "llave": "No",
+            "naturaleza": "Cuantitativa (temporal)",
+            "composicion_formal": "last_update = {fecha/hora}",
+            "dominio": "last_update ∈ DATETIME; default NULL",
+            "descripcion_detallada": "Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto NULL."
+          }
+        }
+      ],
+      "description_detailed": "Vincula usuarios con referencias de métodos de pago administradas por proveedores externos. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_users`, `tbc_payment_methods_types`, `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `uk_provider_method` (`provider`,`provider_method_ref`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_usuario_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_user_payment_methods_after_insert, trg_tbd_user_payment_methods_after_update, trg_tbd_user_payment_methods_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "formal_notation": "tbd_user_payment_methods = @ID + #user_ID + #payment_method_type_ID + provider + provider_method_ref + label + last_four + is_default + status + creation_date + last_update"
     },
     {
       "kind": "trigger",
@@ -4226,9 +4670,6 @@
     "tb_products",
     "tb_users",
     "tbc_categories",
-    "tbc_gen_country_profile",
-    "tbc_gen_family_names",
-    "tbc_gen_given_names",
     "tbc_payment_methods",
     "tbc_payment_methods_types",
     "tbd_products_categories",
@@ -4245,10 +4686,13 @@
     "tbd_address_components",
     "tbd_cancellation_items",
     "tbd_carts_items",
-    "tbd_order_items"
+    "tbd_order_items",
+    "tbd_products_users_providers",
+    "tbd_return_items",
+    "tbd_user_payment_methods"
   ],
-  "row_counted_at": "2026-11-04 18:44:17 -06:00",
-  "row_count_source": "Conteo streaming de filas reales en sentencias INSERT de BD19.sql; 2026-11-04 18:44:17 -06:00; corresponde al respaldo, no a la instancia en vivo.",
+  "row_counted_at": "2026-11-05 10:48:03 -06:00",
+  "row_count_source": "Conteo streaming de filas reales en sentencias INSERT de BD19.sql; 2026-11-05 10:48:03 -06:00; corresponde al respaldo, no a la instancia en vivo.",
   "pending_confirmations": [
     "tb_payments.transaction_reference: confirmar qué pasarelas o medios pueden dejar la referencia NULL y el momento en que se recibe.",
     "tb_products.SKU: confirmar el estándar del código y si se captura manualmente o se importa desde otro sistema.",
@@ -4283,9 +4727,9 @@
   ],
   "dictionary_counts": {
     "tables": 25,
-    "views": 25,
-    "triggers": 75,
-    "columns": 184,
-    "foreign_keys": 30
+    "views": 24,
+    "triggers": 72,
+    "columns": 194,
+    "foreign_keys": 34
   }
 }

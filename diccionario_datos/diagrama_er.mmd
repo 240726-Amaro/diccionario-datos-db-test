@@ -9,26 +9,6 @@ erDiagram
     datetime operation_date
     bit operation_status
   }
-  tbc_gen_country_profile {
-    char country_code, PK
-    varchar country_name
-    varchar phone_prefix
-    tinyint phone_digits
-    varchar title_male
-    varchar title_female
-    bit status
-  }
-  tbc_gen_family_names {
-    int ID, PK
-    char country_code, FK
-    varchar name
-  }
-  tbc_gen_given_names {
-    int ID, PK
-    char country_code, FK
-    tinyint_unsigned gender_ID
-    varchar name
-  }
   %% Módulo: Usuarios y direcciones
   tb_people {
     bigint_unsigned person_ID, PK
@@ -72,6 +52,28 @@ erDiagram
     varchar component_type
     bit status
     bigint_unsigned address_sup_ID, FK
+    datetime creation_date
+    datetime last_update
+  }
+  tbd_products_users_providers {
+    int user_ID, PK, FK
+    int_unsigned product_ID, PK, FK
+    enum type_ownership
+    bit status
+    datetime avalaible_date
+    datetime creation_date
+    datetime last_update
+  }
+  tbd_user_payment_methods {
+    bigint_unsigned ID, PK
+    int user_ID, FK
+    int_unsigned payment_method_type_ID, FK
+    varchar provider
+    varchar provider_method_ref
+    varchar label
+    char last_four
+    tinyint is_default
+    bit status
     datetime creation_date
     datetime last_update
   }
@@ -239,17 +241,26 @@ erDiagram
     datetime creation_date
     datetime last_update
   }
+  tbd_return_items {
+    int_unsigned return_ID, PK, FK
+    int_unsigned order_item_ID, PK, FK
+    int_unsigned quantity
+    varchar condition_notes
+    datetime creation_date
+    datetime last_update
+  }
   %% Relaciones: Usuarios y direcciones
   tb_users ||--o{ tb_people : "fk_people_user"
   tb_users ||--o{ tb_user_addresses : "fk_addresses_users"
   tb_user_addresses ||--o{ tbd_address_components : "fk_component_address"
   tbd_address_components ||--o{ tbd_address_components : "fk_component_parent"
+  tb_products ||--o{ tbd_products_users_providers : "fk_products2"
+  tb_users ||--o{ tbd_products_users_providers : "fk_user1"
+  tb_users ||--o{ tbd_user_payment_methods : "tbd_user_payment_methods_ibfk_1"
+  tbc_payment_methods_types ||--o{ tbd_user_payment_methods : "tbd_user_payment_methods_ibfk_2"
   %% Relaciones: Productos y categorías
   tbc_categories ||--o{ tbc_categories : "fk_superior_category"
   tb_products ||--o{ tbd_products_categories : "fk_product"
-  %% Relaciones: Auditoría
-  tbc_gen_country_profile ||--o{ tbc_gen_family_names : "fk_gen_family_country"
-  tbc_gen_country_profile ||--o{ tbc_gen_given_names : "fk_gen_given_country"
   %% Relaciones: Órdenes y pagos
   tb_users ||--o{ tb_buyer_orders : "fk_seller_orders_seller"
   tb_users ||--o{ tb_orders : "fk_orders_user"
@@ -275,3 +286,5 @@ erDiagram
   tb_buyer_orders ||--o{ tb_shipments : "fk_shipments_buyer_order"
   tb_order_cancellations ||--o{ tbd_cancellation_items : "fk_cancellation_items_cancellation"
   tbd_order_items ||--o{ tbd_cancellation_items : "fk_cancellation_items_order_item"
+  tbd_order_items ||--o{ tbd_return_items : "fk_return_items_order_item"
+  tb_returns ||--o{ tbd_return_items : "fk_return_items_return"
