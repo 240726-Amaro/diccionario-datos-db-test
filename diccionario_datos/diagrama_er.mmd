@@ -1,23 +1,7 @@
 erDiagram
-  tb_buyer_orders {
-    int ID PK
-    int seller_ID FK
-    decimal subtotal
-    decimal shipping_cost
-    enum fulfillment_status
-    bit status
-    datetime creation_date
-    datetime last_update
-  }
-  tb_carts {
-    int ID PK
-    int user_ID FK
-    bit status
-    datetime creation_date
-    datetime last_update
-  }
+  %% Módulo: Auditoría
   tb_logs {
-    int ID PK
+    int ID, PK
     varchar table_name
     enum operation
     varchar db_user
@@ -25,38 +9,51 @@ erDiagram
     datetime operation_date
     bit operation_status
   }
-  tb_orders {
-    int ID PK
-    int user_id FK
-    decimal total_amount
-    enum status
-    text shipping_address
-    datetime creation_date
-    datetime last_update
+  tbc_gen_country_profile {
+    char country_code, PK
+    varchar country_name
+    varchar phone_prefix
+    tinyint phone_digits
+    varchar title_male
+    varchar title_female
+    bit status
   }
-  tb_payments {
-    int ID PK
-    int order_id FK
-    int payment_method_id FK
-    decimal amount
-    enum payment_status
-    varchar transaction_reference
-    datetime payment_date
-  }
-  tb_products {
-    int ID PK
-    varchar SKU
+  tbc_gen_family_names {
+    int ID, PK
+    char country_code, FK
     varchar name
-    text description
-    decimal current_price
-    int current_stock
-    tinyint status
-    datetime creation_date
+  }
+  tbc_gen_given_names {
+    int ID, PK
+    char country_code, FK
+    tinyint_unsigned gender_ID
+    varchar name
+  }
+  %% Módulo: Usuarios y direcciones
+  tb_people {
+    bigint_unsigned person_ID, PK
+    int user_ID, FK
+    char courtesy_title_ID
+    varchar given_names
+    varchar family_names
+    date birth_date
+    tinyint_unsigned gender_ID
+    char country_code
+    varchar phone
     datetime last_update
+  }
+  tb_users {
+    int ID, PK
+    varchar email
+    varchar nickname
+    varchar password
+    datetime creation_date
+    datetime last_login
+    bit status
   }
   tb_user_addresses {
-    bigint ID PK
-    int user_ID FK
+    bigint_unsigned ID, PK
+    int user_ID, FK
     varchar address_label
     varchar recipient_name
     varchar recipient_phone
@@ -68,141 +65,213 @@ erDiagram
     datetime creation_date
     datetime last_update
   }
-  tb_users {
-    int ID PK
-    varchar email
-    varchar nickname
-    varchar password
-    datetime creation_date
-    datetime last_login
+  tbd_address_components {
+    bigint_unsigned ID, PK
+    bigint_unsigned address_ID, FK
+    varchar value
+    varchar component_type
     bit status
+    bigint_unsigned address_sup_ID, FK
+    datetime creation_date
+    datetime last_update
   }
-  tbc_categories {
-    int ID PK
+  %% Módulo: Productos y categorías
+  tb_products {
+    int_unsigned ID, PK
+    varchar SKU
     varchar name
     text description
-    int sup_id_category FK
+    decimal current_price
+    int_unsigned current_stock
+    tinyint status
+    datetime creation_date
+    datetime last_update
+  }
+  tbc_categories {
+    int_unsigned ID, PK
+    varchar name
+    text description
+    int_unsigned sup_id_category, FK
     bit status
     datetime creation_date
     datetime last_update
   }
+  tbd_products_categories {
+    int_unsigned category_ID, PK
+    int_unsigned product_ID, PK, FK
+    bit status
+    datetime creation_date
+    datetime last_update
+  }
+  %% Módulo: Órdenes y pagos
   tbc_payment_methods {
-    int ID PK
+    int_unsigned ID, PK
     varchar name
     text description
     bit status
     datetime creation_date
   }
   tbc_payment_methods_types {
-    int ID PK
+    int_unsigned ID, PK
     varchar code
     text description
     bit status
     datetime creation_date
     datetime last_update
   }
-  tbd_address_components {
-    bigint ID PK
-    bigint address_ID FK
-    varchar value
-    varchar component_type
+  tb_buyer_orders {
+    int_unsigned ID, PK
+    int seller_ID, FK
+    decimal subtotal
+    decimal shipping_cost
+    enum fulfillment_status
     bit status
-    bigint address_sup_ID FK
+    datetime creation_date
+    datetime last_update
+  }
+  tb_orders {
+    int_unsigned ID, PK
+    int user_id, FK
+    decimal total_amount
+    enum status
+    text shipping_address
+    datetime creation_date
+    datetime last_update
+  }
+  tb_payment_transaction {
+    int_unsigned ID, PK
+    int_unsigned payment_ID, FK
+    enum transaction_type
+    decimal amount
+    enum transaction_status
+    varchar gateway_reference
+    varchar response_message
+    datetime transaction_date
+    datetime creation_date
+    datetime last_update
+  }
+  tb_payments {
+    int_unsigned ID, PK
+    int_unsigned order_id, FK
+    int_unsigned payment_method_id, FK
+    bigint_unsigned user_payment_method_ID, FK
+    decimal amount
+    enum payment_status
+    varchar transaction_reference
+    datetime payment_date
+  }
+  tbd_order_items {
+    int_unsigned ID, PK
+    int_unsigned buyer_order_ID, FK
+    int_unsigned product_ID, FK
+    int provider_ID, FK
+    varchar product_name
+    int_unsigned quantity
+    decimal unit_price
+    decimal subtotal
+    datetime creation_date
+  }
+  %% Módulo: Carritos y wishlist
+  tb_carts {
+    int_unsigned ID, PK
+    int user_ID, FK
+    bit status
     datetime creation_date
     datetime last_update
   }
   tbd_carts_items {
-    int cart_ID PK, FK
-    int provider_ID PK, FK
-    int product_ID PK, FK
-    int quantity
+    int_unsigned cart_ID, PK, FK
+    int provider_ID, PK, FK
+    int_unsigned product_ID, PK, FK
+    int_unsigned quantity
     datetime creation_date
   }
-  tbd_order_details {
-    int ID PK
-    int order_id FK
-    int product_id FK
-    int quantity
-    decimal unit_price
-    decimal subtotal
-    datetime creation_date
-  }
-  tbd_order_items {
-    int ID PK
-    int buyer_order_ID FK
-    int product_ID FK
-    int provider_ID FK
-    varchar product_name
-    int quantity
-    decimal unit_price
-    decimal subtotal
-    datetime creation_date
-  }
-  tbd_products_categories {
-    int category_ID PK
-    int product_ID PK, FK
-    bit status
+  %% Módulo: Envíos, devoluciones y cancelaciones
+  tb_order_cancellations {
+    int_unsigned ID, PK
+    int_unsigned buyer_order_ID, FK
+    int user_ID, FK
+    varchar reason
+    enum cancellation_status
+    datetime request_date
     datetime creation_date
     datetime last_update
   }
-  tbd_products_users_providers {
-    int user_ID PK, FK
-    int product_ID PK, FK
-    enum type_ownership
-    bit status
-    datetime avalaible_date
+  tb_refunds {
+    int_unsigned ID, PK
+    int_unsigned payment_ID, FK
+    int_unsigned return_ID, FK
+    int_unsigned cancellation_ID, FK
+    decimal amount
+    enum refund_status
+    varchar reason
+    datetime refund_date
     datetime creation_date
     datetime last_update
   }
-  tbd_user_payment_methods {
-    bigint ID PK
-    int user_ID FK
-    int payment_method_type_ID FK
-    varchar provider
-    varchar provider_method_ref
-    varchar label
-    char last_four
-    tinyint is_default
-    bit status
+  tb_returns {
+    int_unsigned ID, PK
+    int_unsigned buyer_order_ID, FK
+    int user_ID, FK
+    varchar reason
+    enum return_status
+    datetime request_date
     datetime creation_date
     datetime last_update
   }
-  tbd_users_wishlist_products {
-    int user_ID PK, FK
-    int product_ID PK, FK
-    bit status
+  tb_shipments {
+    int_unsigned ID, PK
+    int_unsigned buyer_order_ID, FK
+    bigint_unsigned address_ID, FK
+    varchar carrier
+    varchar tracking_number
+    enum shipment_status
+    datetime shipped_date
+    datetime estimated_delivery_date
+    datetime delivered_date
     datetime creation_date
     datetime last_update
   }
-  tbd_wishlist {
-    int ID PK
-    int user_id FK
-    int product_id FK
+  tbd_cancellation_items {
+    int_unsigned cancellation_ID, PK, FK
+    int_unsigned order_item_ID, PK, FK
+    int_unsigned quantity
     datetime creation_date
+    datetime last_update
   }
-  tb_users ||--o{ tb_buyer_orders : "fk_seller_orders_seller"
-  tb_users ||--o{ tb_carts : "fk_carts_user"
-  tb_users ||--o{ tb_orders : "fk_orders_user"
-  tbc_payment_methods ||--o{ tb_payments : "fk_payments_method"
-  tb_orders ||--o{ tb_payments : "fk_payments_order"
+  %% Relaciones: Usuarios y direcciones
+  tb_users ||--o{ tb_people : "fk_people_user"
   tb_users ||--o{ tb_user_addresses : "fk_addresses_users"
-  tbc_categories ||--o{ tbc_categories : "fk_superior_category"
   tb_user_addresses ||--o{ tbd_address_components : "fk_component_address"
   tbd_address_components ||--o{ tbd_address_components : "fk_component_parent"
-  tb_carts ||--o{ tbd_carts_items : "fk_cart_items_cart"
-  tbd_products_users_providers ||--o{ tbd_carts_items : "fk_cart_items_product"
-  tbd_products_users_providers ||--o{ tbd_carts_items : "fk_cart_items_provider"
-  tb_orders ||--o{ tbd_order_details : "fk_order_details_order"
-  tb_products ||--o{ tbd_order_details : "fk_order_details_product"
-  tb_buyer_orders ||--o{ tbd_order_items : "fk_order_items_buyer_order"
-  tbd_products_users_providers ||--o{ tbd_order_items : "fk_order_items_product"
-  tbd_products_users_providers ||--o{ tbd_order_items : "fk_order_items_provider"
+  %% Relaciones: Productos y categorías
+  tbc_categories ||--o{ tbc_categories : "fk_superior_category"
   tb_products ||--o{ tbd_products_categories : "fk_product"
-  tb_products ||--o{ tbd_products_users_providers : "fk_products2"
-  tb_users ||--o{ tbd_products_users_providers : "fk_user1"
-  tb_users ||--o{ tbd_user_payment_methods : "tbd_user_payment_methods_ibfk_1"
-  tbc_payment_methods_types ||--o{ tbd_user_payment_methods : "tbd_user_payment_methods_ibfk_2"
-  tb_products ||--o{ tbd_users_wishlist_products : "fk_products3"
-  tb_users ||--o{ tbd_users_wishlist_products : "fk_user2"
-  tb_products ||--o{ tbd_wishlist : "fk_wishlist_product"
-  tb_users ||--o{ tbd_wishlist : "fk_wishlist_user"
+  %% Relaciones: Auditoría
+  tbc_gen_country_profile ||--o{ tbc_gen_family_names : "fk_gen_family_country"
+  tbc_gen_country_profile ||--o{ tbc_gen_given_names : "fk_gen_given_country"
+  %% Relaciones: Órdenes y pagos
+  tb_users ||--o{ tb_buyer_orders : "fk_seller_orders_seller"
+  tb_users ||--o{ tb_orders : "fk_orders_user"
+  tb_payments ||--o{ tb_payment_transaction : "fk_payment_transaction_payment"
+  tbc_payment_methods ||--o{ tb_payments : "fk_payments_method"
+  tb_orders ||--o{ tb_payments : "fk_payments_order"
+  tbd_user_payment_methods ||--o{ tb_payments : "fk_payments_user_method"
+  tb_buyer_orders ||--o{ tbd_order_items : "fk_order_items_buyer_order"
+  tbd_products_users_providers ||--o{ tbd_order_items : "fk_order_items_provider_product"
+  %% Relaciones: Carritos y wishlist
+  tb_users ||--o{ tb_carts : "fk_carts_user"
+  tb_carts ||--o{ tbd_carts_items : "fk_cart_items_cart"
+  tbd_products_users_providers ||--o{ tbd_carts_items : "fk_cart_items_provider_product"
+  %% Relaciones: Envíos, devoluciones y cancelaciones
+  tb_buyer_orders ||--o{ tb_order_cancellations : "fk_cancellations_buyer_order"
+  tb_users ||--o{ tb_order_cancellations : "fk_cancellations_user"
+  tb_order_cancellations ||--o{ tb_refunds : "fk_refunds_cancellation"
+  tb_payments ||--o{ tb_refunds : "fk_refunds_payment"
+  tb_returns ||--o{ tb_refunds : "fk_refunds_return"
+  tb_buyer_orders ||--o{ tb_returns : "fk_returns_buyer_order"
+  tb_users ||--o{ tb_returns : "fk_returns_user"
+  tb_user_addresses ||--o{ tb_shipments : "fk_shipments_address"
+  tb_buyer_orders ||--o{ tb_shipments : "fk_shipments_buyer_order"
+  tb_order_cancellations ||--o{ tbd_cancellation_items : "fk_cancellation_items_cancellation"
+  tbd_order_items ||--o{ tbd_cancellation_items : "fk_cancellation_items_order_item"

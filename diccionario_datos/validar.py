@@ -1,11 +1,62 @@
 ﻿import json, re, zipfile, pathlib, xml.etree.ElementTree as ET, sys
 
 BASE = pathlib.Path(__file__).parent
+ROOT = BASE.parent
 MD = (BASE / 'diccionario_datos.md').read_text(encoding='utf-8')
+DBML = (BASE / 'schema.dbml').read_text(encoding='utf-8')
 SCHEMA = json.loads((BASE / 'estructura.json').read_text(encoding='utf-8'))
-TABLES = [o['name'] for o in SCHEMA['objects'] if o['kind'] == 'table']
-EXPECTED_COLUMNS = sum(len(o.get('columns', [])) for o in SCHEMA['objects'] if o['kind'] == 'table')
-TABLE_OBJECTS = [o for o in SCHEMA['objects'] if o['kind'] == 'table']
+SELECTED = set(SCHEMA.get('dictionary_tables', []))
+TABLES = [o['name'] for o in SCHEMA['objects'] if o['kind'] == 'table' and o['name'] in SELECTED]
+EXPECTED_COLUMNS = sum(len(o.get('columns', [])) for o in SCHEMA['objects'] if o['kind'] == 'table' and o['name'] in SELECTED)
+TABLE_OBJECTS = [o for o in SCHEMA['objects'] if o['kind'] == 'table' and o['name'] in SELECTED]
+OBJECT_COUNTS = {k: sum(o['kind'] == k for o in SCHEMA['objects']) for k in ('table','view','trigger','procedure','function')}
+FK_NAMES = []
+for table in TABLE_OBJECTS:
+    for index, match in enumerate(re.finditer(r'(?:CONSTRAINT\s+`([^`]+)`\s+)?FOREIGN KEY', table['sql'], re.I), 1):
+        FK_NAMES.append(match.group(1) or f"{table['name']}.FK_{index}")
+CLASSIFICATION_EMPTY = [t['name']+'.'+c.get('name','?') for t in TABLE_OBJECTS for c in t.get('columns',[]) for key in ('valor','origen','obligatoriedad','llave','naturaleza','composicion_formal','dominio','descripcion_detallada') if not c.get('classification',{}).get(key)]
+DBML_TABLES = re.findall(r'^Table\s+([\w]+)\s*\{', DBML, re.M)
+DBML_REFS = re.findall(r'^Ref:\s+', DBML, re.M)
+DBML_STRUCTURAL_OK = len(DBML_TABLES) == len(TABLE_OBJECTS) and len(DBML_REFS) == len(FK_NAMES) and DBML.count('{') == DBML.count('}')
+
+def independent_insert_count(target):
+    """Second count-only tokenizer for quoted top-level INSERT lines; stores no values."""
+    source = ROOT / 'Practica03' / 'backups' / 'BD19.sql'
+    active = False; in_values = False; depth = 0; total = 0
+    with source.open('r', encoding='utf-8', errors='replace') as stream:
+        for line in stream:
+            if not active:
+                prefix = line.lstrip()[:500]
+                if prefix.startswith(('CREATE','/*!')) and re.search(r'\bVIEW\b', prefix, re.I): break
+                prefix = 'INSERT INTO `' + target + '`'
+                if not line.lstrip().upper().startswith(prefix.upper()): continue
+                active = True; in_values = False; depth = 0
+            start = 0
+            if not in_values:
+                marker = re.search(r'\bVALUES\b', line, re.I)
+                if not marker: continue
+                in_values = True; start = marker.end()
+            quote = None; escaped = False; pos = start
+            while pos < len(line):
+                ch = line[pos]
+                if quote:
+                    if escaped: escaped = False
+                    elif ch == '\\': escaped = True
+                    elif ch == quote:
+                        if pos+1 < len(line) and line[pos+1] == quote: pos += 1
+                        else: quote = None
+                elif ch in ("'", '"', '`'): quote = ch
+                elif ch == '(':
+                    if depth == 0: total += 1
+                    depth += 1
+                elif ch == ')' and depth: depth -= 1
+                elif ch == ';' and depth == 0:
+                    active = False; in_values = False; break
+                pos += 1
+    return total
+
+SMALL_TABLE_CHECKS = {name: independent_insert_count(name) for name in ('tb_users','tb_people','tb_logs','tbc_gen_country_profile','tbc_gen_family_names','tbc_gen_given_names')}
+SMALL_TABLE_CHECKS_OK = all(SMALL_TABLE_CHECKS[name] == SCHEMA.get('row_counts',{}).get(name) for name in SMALL_TABLE_CHECKS)
 
 # Markdown: each table needs description, notation, technical and classification tables.
 sections = {}
@@ -69,8 +120,8 @@ xlsx_missing_tables = [name for name in TABLES if not any(row and row[0] == name
 xlsx_bad_table_rows = []
 for row in tab_rows[1:]:
     if row and row[0] in TABLES:
-        # Table sheet columns: name, prefix, module, engine, charset, collation, detailed description, formal notation.
-        if len(row) < 8 or not row[6].strip() or not row[7].strip() or 'No especificado' in row[6]:
+        # Table sheet columns include the row count before the legacy descriptive fields.
+        if len(row) < 9 or not row[7].strip() or not row[8].strip() or 'No especificado' in row[7]:
             xlsx_bad_table_rows.append(row[0])
 xlsx_column_count = max(0, len(col_rows) - 1)
 xlsx_bad_column_descriptions = []
@@ -122,6 +173,18 @@ for table in TABLE_OBJECTS:
                 bad_date_domains.append(table['name'] + '.' + column['name'])
 
 result = {
+    'conteos_esquema': {
+        'objetos': OBJECT_COUNTS,
+        'columnas': EXPECTED_COLUMNS,
+        'llaves_foraneas': len(FK_NAMES),
+        'columnas_derivadas': sum('GENERATED' in c.get('extra','').upper() for t in TABLE_OBJECTS for c in t.get('columns',[])),
+        'coinciden_con_estructura_json': SCHEMA.get('dictionary_counts',{}).get('columns') == EXPECTED_COLUMNS and SCHEMA.get('dictionary_counts',{}).get('foreign_keys') == len(FK_NAMES),
+        'campos_de_clasificacion_vacios': CLASSIFICATION_EMPTY,
+        'llaves_foraneas_detectadas': FK_NAMES,
+        'verificacion_independiente_tablas_pequenas': SMALL_TABLE_CHECKS,
+        'conteos_pequenos_coinciden': SMALL_TABLE_CHECKS_OK,
+        'schema_dbml_estructura': {'tablas': len(DBML_TABLES), 'referencias': len(DBML_REFS), 'llaves_balanceadas': DBML.count('{') == DBML.count('}'), 'resultado': DBML_STRUCTURAL_OK},
+    },
     'markdown': {
         'tablas': len(TABLES),
         'tablas_con_secciones_1_a_4': len(TABLES) - len(md_missing_sections),
@@ -155,7 +218,7 @@ result = {
         'errores_dominio_FK': bad_fk_domains,
         'errores_dominio_fecha': bad_date_domains,
     },
-    'resultado': 'OK' if not (md_missing_sections or md_bad_descriptions or xlsx_missing_tables or xlsx_bad_table_rows or xlsx_bad_column_descriptions or md_class_rows != EXPECTED_COLUMNS or xlsx_column_count != EXPECTED_COLUMNS or bad_identifier_nature or bad_formal_notation or bad_auto_increment_domain or not password_hash_ok or bad_fk_domains or bad_date_domains or generic_descriptions or descriptions_with_restrictions) else 'FALLÓ'
+    'resultado': 'OK' if not (md_missing_sections or md_bad_descriptions or xlsx_missing_tables or xlsx_bad_table_rows or xlsx_bad_column_descriptions or md_class_rows != EXPECTED_COLUMNS or xlsx_column_count != EXPECTED_COLUMNS or bad_identifier_nature or bad_formal_notation or bad_auto_increment_domain or not password_hash_ok or bad_fk_domains or bad_date_domains or generic_descriptions or descriptions_with_restrictions or CLASSIFICATION_EMPTY or not SMALL_TABLE_CHECKS_OK or not DBML_STRUCTURAL_OK or SCHEMA.get('dictionary_counts',{}).get('columns') != EXPECTED_COLUMNS or SCHEMA.get('dictionary_counts',{}).get('foreign_keys') != len(FK_NAMES)) else 'FALLÓ'
 }
 print(json.dumps(result, ensure_ascii=False, indent=2))
 if result['resultado'] != 'OK':
