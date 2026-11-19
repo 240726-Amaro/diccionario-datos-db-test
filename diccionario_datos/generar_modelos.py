@@ -8,7 +8,7 @@ def selected_view(obj):
  refs=set(re.findall(r'`([^`]+)`',obj['sql'])); refs.discard('tb_logs')
  return bool(refs & selected_set)
 vs=[x for x in O if x['kind']=='view' and selected_view(x)]; gs=[x for x in O if x['kind']=='trigger' and (lambda m: bool(m and m.group(1) in selected_set))(re.search(r'\bON\s+`([^`]+)`',x['sql'],re.I))]; ps=[x for x in O if x['kind']=='procedure']; fs=[x for x in O if x['kind']=='function']
-SOURCE_NOTE=f"Estructura y totales de registros obtenidos del respaldo BD19.sql (fecha del archivo: {DATA.get('source_modified')}). Conteo de registros realizado el: {DATA.get('row_counted_at')}. Los totales corresponden al respaldo, no a la instancia en vivo."
+SOURCE_NOTE=f"Estructura y totales de registros obtenidos del respaldo BD23.sql (fecha del archivo: {DATA.get('source_modified')}). Conteo de registros realizado el: {DATA.get('row_counted_at')}. Los totales corresponden al respaldo, no a la instancia en vivo."
 def tablecols(t):
  cols=[]; cons=[]
  for ln in t['sql'].splitlines():
@@ -67,7 +67,7 @@ for a,n,c,b,bc,act in fks:
 (D/'schema.dbml').write_text('\n'.join(bml)+'\n',encoding='utf-8')
 # workbook rows from schema (inline strings, no optional packages)
 sheets={}
-sheets['Tablas']=[['Tabla','Registros BD19','Prefijo/tipo','Módulo','Motor','Charset','Collation','Descripción detallada','Notación formal']]+[[t['name'],DATA.get('row_counts',{}).get(t['name'],0), 'principal tb_' if t['name'].startswith('tb_') else 'catálogo tbc_' if t['name'].startswith('tbc_') else 'detalle tbd_','Según descripción inferida','InnoDB','utf8mb4','utf8mb4_0900_ai_ci',t.get('description_detailed','Descripción derivada del esquema.'),t.get('formal_notation','')] for t in ts]
+sheets['Tablas']=[['Tabla','Registros BD23','Prefijo/tipo','Módulo','Motor','Charset','Collation','Descripción detallada','Notación formal']]+[[t['name'],DATA.get('row_counts',{}).get(t['name'],0), 'principal tb_' if t['name'].startswith('tb_') else 'catálogo tbc_' if t['name'].startswith('tbc_') else 'detalle tbd_','Según descripción inferida','InnoDB','utf8mb4','utf8mb4_0900_ai_ci',t.get('description_detailed','Descripción derivada del esquema.'),t.get('formal_notation','')] for t in ts]
 sheets['Columnas']=[['Tabla','#','Columna','Tipo','Longitud/precisión','NULL','Default','Extras','Llave técnica','Valor','Origen','Obligatoriedad','Llave','Naturaleza','Composición formal','Dominio','Descripción detallada']]
 for t in ts:
  cs,co=tablecols(t)
@@ -98,9 +98,7 @@ def routine_signature(sql, kind='PROCEDURE'):
   i+=1
  return sql[start:i-1] if depth==0 else ''
 proc_descriptions={
- 'sp_gen_validate_params':('Valida total (1–100000), edades (18–100), porcentaje activo (0–100) y país existente; señala error si falla.', 'tbc_gen_country_profile'),
- 'sp_gen_insert_user_person':('Inserta la cuenta y su perfil personal, y devuelve el ID mediante parámetro OUT.', 'tb_users, tb_people'),
- 'sp_generate_users':('Valida los argumentos y genera en lote usuarios/personas usando los catálogos y funciones fn_gen_* dentro de una transacción.', 'tb_users, tb_people, tbc_gen_*; tb_logs por triggers'),
+ 'sp_pay_order':('Valida orden Pending sin pagos, método del usuario activo y propio, método de catálogo activo y 1–48 pagos (meses solo CREDIT_CARD); inserta un pago Pending y una transacción Charge por cuota; aparta cupones GIFT_COUPON; ROLLBACK + RESIGNAL ante error.', 'tb_payments, tb_payment_transaction, tbd_user_payment_methods; lee tb_orders, tbc_payment_methods, tbc_payment_methods_types'),
  'sp_register_user_person':('Valida y registra conjuntamente una cuenta y su perfil personal (inferido).','tb_users, tb_people (inferido)'),
  'sp_soft_delete':('Valida la tabla e identificador indicados y aplica borrado lógico al registro permitido.','tabla indicada por parámetro'),
  'sp_soft_delete_product':('Comprueba el producto y marca su status como inactivo, conservando el historial.','tb_products'),
@@ -122,13 +120,22 @@ for table in sorted(ts,key=lambda t:(-(row_counts[t['name']] if isinstance(row_c
 sheets['Volumen_datos'].append(['TOTAL verificable',row_total,'100.00%'])
 sheets['Volumen_datos'] += [['Tablas sin INSERT verificable',len(ts)-verified,''],['Fuente',SOURCE_NOTE,'Conteo de filas INSERT; no es un conteo en vivo.'],['Nota','tb_logs crece con INSERT/UPDATE/DELETE auditados; tb_users y tb_people contienen gran parte de datos de prueba generados.','']]
 sheets['Convenciones']=[['Elemento','Convención'],['tb_','Tabla principal'],['tbc_','Catálogo'],['tbd_','Detalle o relación'],['vw_','Vista'],['trg_','Trigger'],['sp_','Procedimiento'],['fk_','Llave foránea'],['uk_','Restricción UNIQUE'],['chk_','Restricción CHECK'],['creation_date / last_update','Fechas de ciclo de vida; ver default por columna'],['status','Dominio depende del tipo SQL; bit(1) y tinyint no se presumen equivalentes']]
+sheets['Valores_catalogo']=[['Catálogo','ID','Código/nombre','Descripción']]+[[cat,r['ID'],list(r.values())[1],r['description']] for cat,rows in DATA.get('catalog_values',{}).items() for r in rows]
 sheets['Historial_cambios']=[['Versión','Objeto','Cantidad','Detalle'],
- ['BD19','Esquema completo',DATA.get('counts',{}).get('tables',0),'Fuente: Practica03/backups/BD19.sql.'],
- ['BD19','Vistas',DATA.get('counts',{}).get('views',0),'Definiciones finales del respaldo.'],
- ['BD19','Triggers',DATA.get('counts',{}).get('triggers',0),'Definiciones del respaldo.'],
- ['BD19','Procedimientos',DATA.get('counts',{}).get('procedures',0),'Definiciones del respaldo.'],
- ['BD19','Funciones',DATA.get('counts',{}).get('functions',0),'Definiciones del respaldo.'],
- ['BD19','Tablas en este diccionario',len(ts),'tb_logs más 24 tablas auditadas; las pobladas se priorizan dentro de las auditadas. Se omiten los catálogos tbc_gen_* sin vistas ni triggers.']]
+ ['BD23','Esquema completo',DATA.get('counts',{}).get('tables',0),'Fuente: Practica04/backups/BD23.sql.'],
+ ['BD23','Vistas',DATA.get('counts',{}).get('views',0),'Definiciones finales del respaldo.'],
+ ['BD23','Triggers',DATA.get('counts',{}).get('triggers',0),'Definiciones del respaldo.'],
+ ['BD23','Procedimientos',DATA.get('counts',{}).get('procedures',0),'Definiciones del respaldo.'],
+ ['BD23','Funciones',DATA.get('counts',{}).get('functions',0),'Definiciones del respaldo.'],
+ ['BD23','Tablas en este diccionario',len(ts),'Las 26 tablas: tb_logs más 25 tablas auditadas.'],
+ ['BD23','Eliminados',3,'tbc_gen_country_profile, tbc_gen_family_names, tbc_gen_given_names con sus 3 vistas, 9 triggers, 5 funciones fn_gen_* y 3 procedimientos (sp_gen_validate_params, sp_gen_insert_user_person, sp_generate_users).'],
+ ['BD23','tb_orders',1,'Nueva columna cart_ID INT UNSIGNED NOT NULL UNIQUE, FK → tb_carts.ID (1:1 carrito-orden).'],
+ ['BD23','tb_buyer_orders',1,'Nueva columna order_ID INT UNSIGNED NOT NULL, FK → tb_orders.ID; UNIQUE (order_ID, seller_ID) (1:N orden-subórdenes).'],
+ ['BD23','tb_carts',1,'UNIQUE uk_cart_user sustituido por índice idx_cart_user (varios carritos por usuario).'],
+ ['BD23','tb_shipments',2,"shipment_status agrega 'Failed attempt' y 'At pickup point'; nueva columna notes VARCHAR(500) NULL."],
+ ['BD23','Triggers',6,'trg_tb_orders_after_* y trg_tb_buyer_orders_after_* registran cart_ID y order_ID.'],
+ ['BD23','sp_pay_order',1,'Nuevo procedimiento de pago con cuotas.'],
+ ['BD23','Catálogos de pago',9,'4 tipos nuevos en tbc_payment_methods_types y 5 métodos nuevos en tbc_payment_methods.']]
 sheets['Dominios_ENUM']=[['Tipo/dominio','Valores','Usos']]
 enums=defaultdict(list); stats=defaultdict(list)
 for t in ts:
@@ -139,8 +146,9 @@ for typ,uses in enums.items(): sheets['Dominios_ENUM'].append([typ,typ[5:-1],', 
 for typ,uses in stats.items(): sheets['Dominios_ENUM'].append(['status '+typ,'1 activo / 0 inactivo si bit; tinyint sin dominio declarado',', '.join(uses)])
 observations=[
  ('Alta','tbd_products_categories.category_ID carece de FK a tbc_categories.','Declarar FK y definir acciones referenciales.'),
- ('Alta','Coexisten tb_orders/tbd_order_details y tb_buyer_orders/tbd_order_items; pagos apuntan a tb_orders y envíos, devoluciones y cancelaciones a tb_buyer_orders.','Confirmar flujos y definir un modelo canónico para órdenes y pagos.'),
- ('Alta','tb_buyer_orders solo guarda seller_ID.','Agregar la referencia al comprador si el flujo lo requiere.'),
+ ('Resuelta','BD23 encadena tb_carts → tb_orders (1:1 por cart_ID UNIQUE) → tb_buyer_orders (1:N por order_ID) → tbd_order_items; el comprador de una suborden se obtiene por order_ID → tb_orders.user_id.','Sin acción.'),
+ ('Media','tb_orders.total_amount y tb_buyer_orders.subtotal se almacenan sin regla que los sincronice; sp_pay_order cobra total_amount tal como está.','Recalcular totales antes de pagar.'),
+ ('Media','fk_buyer_orders_order y fk_orders_cart no declaran ON DELETE mientras fk_orders_user usa CASCADE; un borrado físico de usuario con subórdenes fallará.','Mantener borrado lógico o definir acciones referenciales coherentes.'),
  ('Alta','tb_refunds.return_ID y cancellation_ID son opcionales sin CHECK de exactamente uno.','Agregar CHECK XOR o separar el origen del reembolso.'),
  ('Alta','tbd_return_items.quantity y tbd_cancellation_items.quantity no tienen CHECK quantity > 0.','Agregar restricción positiva.'),
  ('Media','tb_payments.transaction_reference y tb_payment_transaction.gateway_reference pueden duplicar la referencia de pasarela.','Definir el campo canónico y reconciliar su uso.'),
@@ -173,7 +181,7 @@ with zipfile.ZipFile(D/'diccionario_datos.xlsx','w',zipfile.ZIP_DEFLATED) as z:
   end=colname(max(len(r) for r in sheets[n])); z.writestr(f'xl/worksheets/sheet{i}.xml','<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="30"/><sheetData>'+''.join(rows)+f'</sheetData><autoFilter ref="A1:{end}{len(sheets[n])}"/></worksheet>')
  z.writestr('xl/styles.xml','<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD9EAF7"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="1" borderId="0" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs></styleSheet>')
 # README
-(D/'README.md').write_text('# Diccionario de datos de BD19\n\nEntregables generados desde el DDL extraído de `Practica03/backups/BD19.sql`: `diccionario_datos.md`, `diccionario_datos.xlsx`, `estructura.json`, `diagrama_er.mmd`, `schema.dbml` y el sitio estático `Practica03/docs`. El diccionario contiene `tb_logs` y 24 tablas auditadas, con prioridad para las pobladas entre las auditadas; incluye sus 24 vistas y 72 triggers. Los tres catálogos poblados `tbc_gen_*` se omiten porque BD19 no les declara vistas ni triggers. `estructura.json` conserva el esquema completo de 29 tablas. No se guardan valores de filas del volcado.\n\n## Regeneración segura\n\nDesde la raíz del repositorio, con Python 3:\n\n```powershell\npython Practica03\\diccionario_datos\\extraer.py\npython Practica03\\diccionario_datos\\contar_filas.py\npython Practica03\\diccionario_datos\\generar.py\npython Practica03\\diccionario_datos\\generar_modelos.py\npython Practica03\\diccionario_datos\\generar_sitio.py\n```\n\n`extraer.py` conserva exclusivamente DDL. `contar_filas.py` procesa las tuplas INSERT en streaming y persiste solo conteos agregados. Los conteos pertenecen al respaldo BD19, no a una instancia en vivo.\n',encoding='utf-8')
+(D/'README.md').write_text('# Diccionario de datos — DB Test (BD23)\n\nEntregables generados desde el DDL extraído de `Practica04/backups/BD23.sql` (base `db_test`): `diccionario_datos.md`, `diccionario_datos.xlsx`, `estructura.json`, `diagrama_er.mmd`, `schema.dbml`, el diagrama Archify `Practica04/diagrama/db-test-archify.html` y el sitio estático `Practica04/docs`. El diccionario documenta las 26 tablas (`tb_logs` y 25 tablas auditadas), sus 25 vistas, 75 triggers, 6 procedimientos y 10 funciones. Única excepción a “no guardar valores de filas”: se transcriben ID, código/nombre y descripción de los catálogos `tbc_payment_methods_types` y `tbc_payment_methods`.\n\nEl diagrama Archify se genera aparte: `python Practica04\\diccionario_datos\\generar_archify.py` escribe el candidato y luego se ejecuta `archify finalize erd`.\n\n## Regeneración segura\n\nDesde la raíz del repositorio, con Python 3:\n\n```powershell\npython Practica04\\diccionario_datos\\extraer.py\npython Practica04\\diccionario_datos\\contar_filas.py\npython Practica04\\diccionario_datos\\generar.py\npython Practica04\\diccionario_datos\\generar_modelos.py\npython Practica04\\diccionario_datos\\generar_sitio.py\n```\n\n`extraer.py` conserva exclusivamente DDL. `contar_filas.py` procesa las tuplas INSERT en streaming y persiste solo conteos agregados. Los conteos pertenecen al respaldo BD23, no a una instancia en vivo.\n',encoding='utf-8')
 # validation
 counts={k:sum(x['kind']==k for x in O) for k in ('table','view','trigger','procedure')}; missing=[x[1] for x in fks if x[1] not in (D/'diccionario_datos.md').read_text(encoding='utf-8')]
 print(json.dumps({'conteos':counts,'FK_SQL':len(fks),'FK_nombres_ausentes_en_diccionario':missing,'hojas_XLSX':names},ensure_ascii=False))

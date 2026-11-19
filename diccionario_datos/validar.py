@@ -21,7 +21,7 @@ DBML_STRUCTURAL_OK = len(DBML_TABLES) == len(TABLE_OBJECTS) and len(DBML_REFS) =
 
 def independent_insert_count(target):
     """Second count-only tokenizer for quoted top-level INSERT lines; stores no values."""
-    source = ROOT / 'Practica03' / 'backups' / 'BD19.sql'
+    source = ROOT / 'backups' / 'BD23.sql'
     active = False; in_values = False; depth = 0; total = 0
     with source.open('r', encoding='utf-8', errors='replace') as stream:
         for line in stream:
@@ -55,7 +55,7 @@ def independent_insert_count(target):
                 pos += 1
     return total
 
-SMALL_TABLE_CHECKS = {name: independent_insert_count(name) for name in ('tb_users','tb_people','tb_logs','tbc_gen_country_profile','tbc_gen_family_names','tbc_gen_given_names')}
+SMALL_TABLE_CHECKS = {name: independent_insert_count(name) for name in ('tb_users','tb_people','tb_logs','tbc_payment_methods','tbc_payment_methods_types','tb_orders','tb_buyer_orders')}
 SMALL_TABLE_CHECKS_OK = all(SMALL_TABLE_CHECKS[name] == SCHEMA.get('row_counts',{}).get(name) for name in SMALL_TABLE_CHECKS)
 
 # Markdown: each table needs description, notation, technical and classification tables.

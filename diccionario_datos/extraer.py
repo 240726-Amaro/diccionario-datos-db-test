@@ -1,4 +1,4 @@
-"""Extrae definiciones DDL de BD17.sql; los bloques INSERT se descartan."""
+"""Extrae definiciones DDL de BD23.sql (respaldo de db_test); los bloques INSERT se descartan."""
 import json
 import pathlib
 import re
@@ -9,8 +9,8 @@ def local_stamp(value):
     return f"{value:%Y-%m-%d %H:%M:%S} {offset[:3]}:{offset[3:]}"
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SRC = ROOT / "Practica03" / "backups" / "BD19.sql"
-OUT = ROOT / "Practica03" / "diccionario_datos"
+SRC = ROOT / "Practica04" / "backups" / "BD23.sql"
+OUT = ROOT / "Practica04" / "diccionario_datos"
 
 objects = []
 active = None
@@ -72,12 +72,38 @@ for name, definition in final_views:
     else:
         objects.append({"kind": "view", "name": name, "sql": sql})
 
+# Excepción documentada: solo los catálogos de pago se transcriben (ID, código/nombre y
+# descripción) porque el diccionario documenta sus valores registrados. Ningún otro INSERT se conserva.
+CATALOGS = {"tbc_payment_methods_types": ("ID", "code", "description"), "tbc_payment_methods": ("ID", "name", "description")}
+def split_tuples(body):
+    rows, row, field, quote, i = [], None, "", None, 0
+    while i < len(body):
+        ch = body[i]
+        if quote:
+            if ch == "\\" and i + 1 < len(body): field += body[i+1]; i += 2; continue
+            if ch == quote: quote = None
+            else: field += ch
+        elif ch in "'\"": quote = ch
+        elif ch == "(" and row is None: row, field = [], ""
+        elif ch == "," and row is not None: row.append(field.strip()); field = ""
+        elif ch == ")" and row is not None: row.append(field.strip()); rows.append(row); row = None; field = ""
+        elif row is not None: field += ch
+        i += 1
+    return rows
+catalog_values = {}
+for name, labels in CATALOGS.items():
+    m = re.search(r"^INSERT INTO `" + name + r"` VALUES (.*);\s*$", source_text, re.M)
+    if m:
+        catalog_values[name] = [dict(zip(labels, (int(r[0]),) + tuple(r[1:3]))) for r in split_tuples(m.group(1))]
+
 counts = {k: sum(item["kind"] == k for item in objects)
           for k in ("table", "view", "trigger", "procedure", "function")}
 payload = {
-    "database": "BD19",
+    "database": "db_test",
+    "backup": "BD23",
+    "catalog_values": catalog_values,
     "mysql_version": "8.0.45",
-    "source": "Practica03/backups/BD19.sql",
+    "source": "Practica04/backups/BD23.sql",
     "source_date": datetime.fromtimestamp(SRC.stat().st_mtime).astimezone().date().isoformat(),
     "source_modified": local_stamp(datetime.fromtimestamp(SRC.stat().st_mtime).astimezone()),
     "extraction_scope": "CREATE TABLE (incluye índices, claves y CHECK declarados en tabla), CREATE/ALTER TABLE y CREATE INDEX si existen, además de VIEW/TRIGGER/PROCEDURE/FUNCTION. INSERT INTO se descarta durante extracción de esquema.",

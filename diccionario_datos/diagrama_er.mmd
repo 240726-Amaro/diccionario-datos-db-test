@@ -1,128 +1,8 @@
 erDiagram
-  %% Módulo: Auditoría
-  tb_logs {
-    int ID, PK
-    varchar table_name
-    enum operation
-    varchar db_user
-    text description
-    datetime operation_date
-    bit operation_status
-  }
-  %% Módulo: Usuarios y direcciones
-  tb_people {
-    bigint_unsigned person_ID, PK
-    int user_ID, FK
-    char courtesy_title_ID
-    varchar given_names
-    varchar family_names
-    date birth_date
-    tinyint_unsigned gender_ID
-    char country_code
-    varchar phone
-    datetime last_update
-  }
-  tb_users {
-    int ID, PK
-    varchar email
-    varchar nickname
-    varchar password
-    datetime creation_date
-    datetime last_login
-    bit status
-  }
-  tb_user_addresses {
-    bigint_unsigned ID, PK
-    int user_ID, FK
-    varchar address_label
-    varchar recipient_name
-    varchar recipient_phone
-    varchar delivery_instructions
-    decimal latitude
-    decimal longitude
-    tinyint is_default
-    bit status
-    datetime creation_date
-    datetime last_update
-  }
-  tbd_address_components {
-    bigint_unsigned ID, PK
-    bigint_unsigned address_ID, FK
-    varchar value
-    varchar component_type
-    bit status
-    bigint_unsigned address_sup_ID, FK
-    datetime creation_date
-    datetime last_update
-  }
-  tbd_products_users_providers {
-    int user_ID, PK, FK
-    int_unsigned product_ID, PK, FK
-    enum type_ownership
-    bit status
-    datetime avalaible_date
-    datetime creation_date
-    datetime last_update
-  }
-  tbd_user_payment_methods {
-    bigint_unsigned ID, PK
-    int user_ID, FK
-    int_unsigned payment_method_type_ID, FK
-    varchar provider
-    varchar provider_method_ref
-    varchar label
-    char last_four
-    tinyint is_default
-    bit status
-    datetime creation_date
-    datetime last_update
-  }
-  %% Módulo: Productos y categorías
-  tb_products {
-    int_unsigned ID, PK
-    varchar SKU
-    varchar name
-    text description
-    decimal current_price
-    int_unsigned current_stock
-    tinyint status
-    datetime creation_date
-    datetime last_update
-  }
-  tbc_categories {
-    int_unsigned ID, PK
-    varchar name
-    text description
-    int_unsigned sup_id_category, FK
-    bit status
-    datetime creation_date
-    datetime last_update
-  }
-  tbd_products_categories {
-    int_unsigned category_ID, PK
-    int_unsigned product_ID, PK, FK
-    bit status
-    datetime creation_date
-    datetime last_update
-  }
   %% Módulo: Órdenes y pagos
-  tbc_payment_methods {
-    int_unsigned ID, PK
-    varchar name
-    text description
-    bit status
-    datetime creation_date
-  }
-  tbc_payment_methods_types {
-    int_unsigned ID, PK
-    varchar code
-    text description
-    bit status
-    datetime creation_date
-    datetime last_update
-  }
   tb_buyer_orders {
     int_unsigned ID, PK
+    int_unsigned order_ID, FK
     int seller_ID, FK
     decimal subtotal
     decimal shipping_cost
@@ -134,6 +14,7 @@ erDiagram
   tb_orders {
     int_unsigned ID, PK
     int user_id, FK
+    int_unsigned cart_ID, FK
     decimal total_amount
     enum status
     text shipping_address
@@ -162,6 +43,21 @@ erDiagram
     varchar transaction_reference
     datetime payment_date
   }
+  tbc_payment_methods {
+    int_unsigned ID, PK
+    varchar name
+    text description
+    bit status
+    datetime creation_date
+  }
+  tbc_payment_methods_types {
+    int_unsigned ID, PK
+    varchar code
+    text description
+    bit status
+    datetime creation_date
+    datetime last_update
+  }
   tbd_order_items {
     int_unsigned ID, PK
     int_unsigned buyer_order_ID, FK
@@ -187,6 +83,16 @@ erDiagram
     int_unsigned product_ID, PK, FK
     int_unsigned quantity
     datetime creation_date
+  }
+  %% Módulo: Auditoría
+  tb_logs {
+    int ID, PK
+    varchar table_name
+    enum operation
+    varchar db_user
+    text description
+    datetime operation_date
+    bit operation_status
   }
   %% Módulo: Envíos, devoluciones y cancelaciones
   tb_order_cancellations {
@@ -231,6 +137,7 @@ erDiagram
     datetime shipped_date
     datetime estimated_delivery_date
     datetime delivered_date
+    varchar notes
     datetime creation_date
     datetime last_update
   }
@@ -249,20 +156,113 @@ erDiagram
     datetime creation_date
     datetime last_update
   }
-  %% Relaciones: Usuarios y direcciones
-  tb_users ||--o{ tb_people : "fk_people_user"
-  tb_users ||--o{ tb_user_addresses : "fk_addresses_users"
-  tb_user_addresses ||--o{ tbd_address_components : "fk_component_address"
-  tbd_address_components ||--o{ tbd_address_components : "fk_component_parent"
-  tb_products ||--o{ tbd_products_users_providers : "fk_products2"
-  tb_users ||--o{ tbd_products_users_providers : "fk_user1"
-  tb_users ||--o{ tbd_user_payment_methods : "tbd_user_payment_methods_ibfk_1"
-  tbc_payment_methods_types ||--o{ tbd_user_payment_methods : "tbd_user_payment_methods_ibfk_2"
-  %% Relaciones: Productos y categorías
-  tbc_categories ||--o{ tbc_categories : "fk_superior_category"
-  tb_products ||--o{ tbd_products_categories : "fk_product"
+  %% Módulo: Usuarios y direcciones
+  tb_people {
+    bigint_unsigned person_ID, PK
+    int user_ID, FK
+    char courtesy_title_ID
+    varchar given_names
+    varchar family_names
+    date birth_date
+    tinyint_unsigned gender_ID
+    char country_code
+    varchar phone
+    datetime last_update
+  }
+  tb_user_addresses {
+    bigint_unsigned ID, PK
+    int user_ID, FK
+    varchar address_label
+    varchar recipient_name
+    varchar recipient_phone
+    varchar delivery_instructions
+    decimal latitude
+    decimal longitude
+    tinyint is_default
+    bit status
+    datetime creation_date
+    datetime last_update
+  }
+  tb_users {
+    int ID, PK
+    varchar email
+    varchar nickname
+    varchar password
+    datetime creation_date
+    datetime last_login
+    bit status
+  }
+  tbd_address_components {
+    bigint_unsigned ID, PK
+    bigint_unsigned address_ID, FK
+    varchar value
+    varchar component_type
+    bit status
+    bigint_unsigned address_sup_ID, FK
+    datetime creation_date
+    datetime last_update
+  }
+  tbd_products_users_providers {
+    int user_ID, PK, FK
+    int_unsigned product_ID, PK, FK
+    enum type_ownership
+    bit status
+    datetime avalaible_date
+    datetime creation_date
+    datetime last_update
+  }
+  tbd_user_payment_methods {
+    bigint_unsigned ID, PK
+    int user_ID, FK
+    int_unsigned payment_method_type_ID, FK
+    varchar provider
+    varchar provider_method_ref
+    varchar label
+    char last_four
+    tinyint is_default
+    bit status
+    datetime creation_date
+    datetime last_update
+  }
+  tbd_users_wishlist_products {
+    int user_ID, PK, FK
+    int_unsigned product_ID, PK, FK
+    bit status
+    datetime creation_date
+    datetime last_update
+  }
+  %% Módulo: Productos y categorías
+  tb_products {
+    int_unsigned ID, PK
+    varchar SKU
+    varchar name
+    text description
+    decimal current_price
+    int_unsigned current_stock
+    tinyint status
+    datetime creation_date
+    datetime last_update
+  }
+  tbc_categories {
+    int_unsigned ID, PK
+    varchar name
+    text description
+    int_unsigned sup_id_category, FK
+    bit status
+    datetime creation_date
+    datetime last_update
+  }
+  tbd_products_categories {
+    int_unsigned category_ID, PK
+    int_unsigned product_ID, PK, FK
+    bit status
+    datetime creation_date
+    datetime last_update
+  }
   %% Relaciones: Órdenes y pagos
+  tb_orders ||--o{ tb_buyer_orders : "fk_buyer_orders_order"
   tb_users ||--o{ tb_buyer_orders : "fk_seller_orders_seller"
+  tb_carts ||--o{ tb_orders : "fk_orders_cart"
   tb_users ||--o{ tb_orders : "fk_orders_user"
   tb_payments ||--o{ tb_payment_transaction : "fk_payment_transaction_payment"
   tbc_payment_methods ||--o{ tb_payments : "fk_payments_method"
@@ -288,3 +288,17 @@ erDiagram
   tbd_order_items ||--o{ tbd_cancellation_items : "fk_cancellation_items_order_item"
   tbd_order_items ||--o{ tbd_return_items : "fk_return_items_order_item"
   tb_returns ||--o{ tbd_return_items : "fk_return_items_return"
+  %% Relaciones: Usuarios y direcciones
+  tb_users ||--o{ tb_people : "fk_people_user"
+  tb_users ||--o{ tb_user_addresses : "fk_addresses_users"
+  tb_user_addresses ||--o{ tbd_address_components : "fk_component_address"
+  tbd_address_components ||--o{ tbd_address_components : "fk_component_parent"
+  tb_products ||--o{ tbd_products_users_providers : "fk_products2"
+  tb_users ||--o{ tbd_products_users_providers : "fk_user1"
+  tb_users ||--o{ tbd_user_payment_methods : "tbd_user_payment_methods_ibfk_1"
+  tbc_payment_methods_types ||--o{ tbd_user_payment_methods : "tbd_user_payment_methods_ibfk_2"
+  tb_products ||--o{ tbd_users_wishlist_products : "fk_products3"
+  tb_users ||--o{ tbd_users_wishlist_products : "fk_user2"
+  %% Relaciones: Productos y categorías
+  tbc_categories ||--o{ tbc_categories : "fk_superior_category"
+  tb_products ||--o{ tbd_products_categories : "fk_product"

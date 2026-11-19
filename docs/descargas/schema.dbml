@@ -1,3 +1,21 @@
+Table tb_buyer_orders {
+  ID int unsigned [pk]
+  order_ID int unsigned
+  seller_ID int
+  subtotal decimal(12,2)
+  shipping_cost decimal(12,2)
+  fulfillment_status enum('Pending','Accepted','Preparing','Sent','Delivered','Canceled','Returned')
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
+Table tb_carts {
+  ID int unsigned [pk]
+  user_ID int
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
 Table tb_logs {
   ID int [pk]
   table_name varchar(100)
@@ -6,6 +24,48 @@ Table tb_logs {
   description text
   operation_date datetime
   operation_status bit(1)
+}
+Table tb_order_cancellations {
+  ID int unsigned [pk]
+  buyer_order_ID int unsigned
+  user_ID int
+  reason varchar(500)
+  cancellation_status enum('Requested','Approved','Rejected','Completed')
+  request_date datetime
+  creation_date datetime
+  last_update datetime
+}
+Table tb_orders {
+  ID int unsigned [pk]
+  user_id int
+  cart_ID int unsigned
+  total_amount decimal(10,2)
+  status enum('Pending','Processing','Shipped','Delivered','Cancelled')
+  shipping_address text
+  creation_date datetime
+  last_update datetime
+}
+Table tb_payment_transaction {
+  ID int unsigned [pk]
+  payment_ID int unsigned
+  transaction_type enum('Charge','Refund','Void')
+  amount decimal(10,2)
+  transaction_status enum('Pending','Completed','Failed')
+  gateway_reference varchar(150)
+  response_message varchar(500)
+  transaction_date datetime
+  creation_date datetime
+  last_update datetime
+}
+Table tb_payments {
+  ID int unsigned [pk]
+  order_id int unsigned
+  payment_method_id int unsigned
+  user_payment_method_ID bigint unsigned
+  amount decimal(10,2)
+  payment_status enum('Pending','Completed','Failed','Refunded')
+  transaction_reference varchar(150)
+  payment_date datetime
 }
 Table tb_people {
   person_ID bigint unsigned [pk]
@@ -27,6 +87,56 @@ Table tb_products {
   current_price decimal(10,2)
   current_stock int unsigned
   status tinyint
+  creation_date datetime
+  last_update datetime
+}
+Table tb_refunds {
+  ID int unsigned [pk]
+  payment_ID int unsigned
+  return_ID int unsigned
+  cancellation_ID int unsigned
+  amount decimal(10,2)
+  refund_status enum('Pending','Processed','Rejected')
+  reason varchar(500)
+  refund_date datetime
+  creation_date datetime
+  last_update datetime
+}
+Table tb_returns {
+  ID int unsigned [pk]
+  buyer_order_ID int unsigned
+  user_ID int
+  reason varchar(500)
+  return_status enum('Requested','Approved','Rejected','Received','Refunded')
+  request_date datetime
+  creation_date datetime
+  last_update datetime
+}
+Table tb_shipments {
+  ID int unsigned [pk]
+  buyer_order_ID int unsigned
+  address_ID bigint unsigned
+  carrier varchar(100)
+  tracking_number varchar(100)
+  shipment_status enum('Preparing','Shipped','In transit','Failed attempt','At pickup point','Delivered','Returned')
+  shipped_date datetime
+  estimated_delivery_date datetime
+  delivered_date datetime
+  notes varchar(500)
+  creation_date datetime
+  last_update datetime
+}
+Table tb_user_addresses {
+  ID bigint unsigned [pk]
+  user_ID int
+  address_label varchar(100)
+  recipient_name varchar(150)
+  recipient_phone varchar(25)
+  delivery_instructions varchar(500)
+  latitude decimal(10,7)
+  longitude decimal(10,7)
+  is_default tinyint(1)
+  status bit(1)
   creation_date datetime
   last_update datetime
 }
@@ -59,120 +169,6 @@ Table tbc_payment_methods_types {
   ID int unsigned [pk]
   code varchar(30)
   description text
-  status bit(1)
-  creation_date datetime
-  last_update datetime
-}
-Table tbd_products_categories {
-  category_ID int unsigned [pk]
-  product_ID int unsigned [pk]
-  status bit(1)
-  creation_date datetime
-  last_update datetime
-}
-Table tb_buyer_orders {
-  ID int unsigned [pk]
-  seller_ID int
-  subtotal decimal(12,2)
-  shipping_cost decimal(12,2)
-  fulfillment_status enum('Pending','Accepted','Preparing','Sent','Delivered','Canceled','Returned')
-  status bit(1)
-  creation_date datetime
-  last_update datetime
-}
-Table tb_carts {
-  ID int unsigned [pk]
-  user_ID int
-  status bit(1)
-  creation_date datetime
-  last_update datetime
-}
-Table tb_order_cancellations {
-  ID int unsigned [pk]
-  buyer_order_ID int unsigned
-  user_ID int
-  reason varchar(500)
-  cancellation_status enum('Requested','Approved','Rejected','Completed')
-  request_date datetime
-  creation_date datetime
-  last_update datetime
-}
-Table tb_orders {
-  ID int unsigned [pk]
-  user_id int
-  total_amount decimal(10,2)
-  status enum('Pending','Processing','Shipped','Delivered','Cancelled')
-  shipping_address text
-  creation_date datetime
-  last_update datetime
-}
-Table tb_payment_transaction {
-  ID int unsigned [pk]
-  payment_ID int unsigned
-  transaction_type enum('Charge','Refund','Void')
-  amount decimal(10,2)
-  transaction_status enum('Pending','Completed','Failed')
-  gateway_reference varchar(150)
-  response_message varchar(500)
-  transaction_date datetime
-  creation_date datetime
-  last_update datetime
-}
-Table tb_payments {
-  ID int unsigned [pk]
-  order_id int unsigned
-  payment_method_id int unsigned
-  user_payment_method_ID bigint unsigned
-  amount decimal(10,2)
-  payment_status enum('Pending','Completed','Failed','Refunded')
-  transaction_reference varchar(150)
-  payment_date datetime
-}
-Table tb_refunds {
-  ID int unsigned [pk]
-  payment_ID int unsigned
-  return_ID int unsigned
-  cancellation_ID int unsigned
-  amount decimal(10,2)
-  refund_status enum('Pending','Processed','Rejected')
-  reason varchar(500)
-  refund_date datetime
-  creation_date datetime
-  last_update datetime
-}
-Table tb_returns {
-  ID int unsigned [pk]
-  buyer_order_ID int unsigned
-  user_ID int
-  reason varchar(500)
-  return_status enum('Requested','Approved','Rejected','Received','Refunded')
-  request_date datetime
-  creation_date datetime
-  last_update datetime
-}
-Table tb_shipments {
-  ID int unsigned [pk]
-  buyer_order_ID int unsigned
-  address_ID bigint unsigned
-  carrier varchar(100)
-  tracking_number varchar(100)
-  shipment_status enum('Preparing','Shipped','In transit','Delivered','Returned')
-  shipped_date datetime
-  estimated_delivery_date datetime
-  delivered_date datetime
-  creation_date datetime
-  last_update datetime
-}
-Table tb_user_addresses {
-  ID bigint unsigned [pk]
-  user_ID int
-  address_label varchar(100)
-  recipient_name varchar(150)
-  recipient_phone varchar(25)
-  delivery_instructions varchar(500)
-  latitude decimal(10,7)
-  longitude decimal(10,7)
-  is_default tinyint(1)
   status bit(1)
   creation_date datetime
   last_update datetime
@@ -212,6 +208,13 @@ Table tbd_order_items {
   subtotal decimal(12,2)
   creation_date datetime
 }
+Table tbd_products_categories {
+  category_ID int unsigned [pk]
+  product_ID int unsigned [pk]
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
 Table tbd_products_users_providers {
   user_ID int [pk]
   product_ID int unsigned [pk]
@@ -242,18 +245,25 @@ Table tbd_user_payment_methods {
   creation_date datetime
   last_update datetime
 }
-Ref: tb_people.user_ID > tb_users.ID // fk_people_user 
-Ref: tbc_categories.sup_id_category > tbc_categories.ID // fk_superior_category 
-Ref: tbd_products_categories.product_ID > tb_products.ID // fk_product 
+Table tbd_users_wishlist_products {
+  user_ID int [pk]
+  product_ID int unsigned [pk]
+  status bit(1)
+  creation_date datetime
+  last_update datetime
+}
+Ref: tb_buyer_orders.order_ID > tb_orders.ID // fk_buyer_orders_order 
 Ref: tb_buyer_orders.seller_ID > tb_users.ID // fk_seller_orders_seller 
 Ref: tb_carts.user_ID > tb_users.ID // fk_carts_user 
 Ref: tb_order_cancellations.buyer_order_ID > tb_buyer_orders.ID // fk_cancellations_buyer_order 
 Ref: tb_order_cancellations.user_ID > tb_users.ID // fk_cancellations_user 
+Ref: tb_orders.cart_ID > tb_carts.ID // fk_orders_cart 
 Ref: tb_orders.user_id > tb_users.ID // fk_orders_user ON DELETE CASCADE
 Ref: tb_payment_transaction.payment_ID > tb_payments.ID // fk_payment_transaction_payment 
 Ref: tb_payments.payment_method_id > tbc_payment_methods.ID // fk_payments_method 
 Ref: tb_payments.order_id > tb_orders.ID // fk_payments_order ON DELETE CASCADE
 Ref: tb_payments.user_payment_method_ID > tbd_user_payment_methods.ID // fk_payments_user_method 
+Ref: tb_people.user_ID > tb_users.ID // fk_people_user 
 Ref: tb_refunds.cancellation_ID > tb_order_cancellations.ID // fk_refunds_cancellation 
 Ref: tb_refunds.payment_ID > tb_payments.ID // fk_refunds_payment 
 Ref: tb_refunds.return_ID > tb_returns.ID // fk_refunds_return 
@@ -262,6 +272,7 @@ Ref: tb_returns.user_ID > tb_users.ID // fk_returns_user
 Ref: tb_shipments.address_ID > tb_user_addresses.ID // fk_shipments_address 
 Ref: tb_shipments.buyer_order_ID > tb_buyer_orders.ID // fk_shipments_buyer_order 
 Ref: tb_user_addresses.user_ID > tb_users.ID // fk_addresses_users 
+Ref: tbc_categories.sup_id_category > tbc_categories.ID // fk_superior_category 
 Ref: tbd_address_components.address_ID > tb_user_addresses.ID // fk_component_address ON DELETE RESTRICT
 Ref: (tbd_address_components.address_ID, tbd_address_components.address_sup_ID) > (tbd_address_components.address_ID, tbd_address_components.ID) // fk_component_parent ON DELETE RESTRICT
 Ref: tbd_cancellation_items.cancellation_ID > tb_order_cancellations.ID // fk_cancellation_items_cancellation 
@@ -270,9 +281,12 @@ Ref: tbd_carts_items.cart_ID > tb_carts.ID // fk_cart_items_cart
 Ref: (tbd_carts_items.provider_ID, tbd_carts_items.product_ID) > (tbd_products_users_providers.user_ID, tbd_products_users_providers.product_ID) // fk_cart_items_provider_product 
 Ref: tbd_order_items.buyer_order_ID > tb_buyer_orders.ID // fk_order_items_buyer_order 
 Ref: (tbd_order_items.provider_ID, tbd_order_items.product_ID) > (tbd_products_users_providers.user_ID, tbd_products_users_providers.product_ID) // fk_order_items_provider_product 
+Ref: tbd_products_categories.product_ID > tb_products.ID // fk_product 
 Ref: tbd_products_users_providers.product_ID > tb_products.ID // fk_products2 
 Ref: tbd_products_users_providers.user_ID > tb_users.ID // fk_user1 
 Ref: tbd_return_items.order_item_ID > tbd_order_items.ID // fk_return_items_order_item 
 Ref: tbd_return_items.return_ID > tb_returns.ID // fk_return_items_return 
 Ref: tbd_user_payment_methods.user_ID > tb_users.ID // tbd_user_payment_methods_ibfk_1 
 Ref: tbd_user_payment_methods.payment_method_type_ID > tbc_payment_methods_types.ID // tbd_user_payment_methods_ibfk_2 
+Ref: tbd_users_wishlist_products.product_ID > tb_products.ID // fk_products3 
+Ref: tbd_users_wishlist_products.user_ID > tb_users.ID // fk_user2 

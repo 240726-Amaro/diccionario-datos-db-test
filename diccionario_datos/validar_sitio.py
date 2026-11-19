@@ -25,7 +25,7 @@ class Links(HTMLParser):
 
 
 data = json.loads(SOURCE.read_text(encoding="utf-8-sig"))
-expected = {"tables": 29, "views": 25, "triggers": 75, "procedures": 8, "functions": 15}
+expected = {"tables": 26, "views": 25, "triggers": 75, "procedures": 6, "functions": 10}
 objects = data.get("objects", [])
 actual = {
     "tables": sum(o.get("kind") == "table" for o in objects),
@@ -70,6 +70,13 @@ for value in parser.targets:
     elif not (DOCS / value).exists():
         broken.append(f"missing:{value}")
 assert not broken, broken
+assert "<title>DB Test</title>" in html and '<a class="brand" href="#inicio">DB Test</a>' in html, "El título del sitio debe ser DB Test"
+table_names = sorted(o["name"] for o in objects if o.get("kind") == "table")
+sidebar = html.split('<nav class="table-index"', 1)[1].split("</nav>", 1)[0]
+linked = sorted(re.findall(r'data-table-link="([^"]+)"', sidebar))
+assert linked == table_names, (set(table_names) ^ set(linked))
+card_ids = set(re.findall(r'<article class="table-card" id="([^"]+)"', html))
+assert all(re.sub(r"[^a-z0-9]+", "-", n).strip("-") in card_ids for n in table_names), "Enlace del índice sin tarjeta"
 volume_total = f"{sum(v for v in data.get('row_counts', {}).values() if isinstance(v,int)):,}"
 for marker in ('id="volumen"', 'Volumen de datos', volume_total, 'Historial de cambios', 'Procedimientos'):
     assert marker in html or marker in (DOCS / "descargas" / "diccionario_datos.md").read_text(encoding="utf-8"), marker
@@ -93,6 +100,7 @@ for path in DOCS.rglob("*"):
 assert not any(patterns.values()), patterns
 
 print(f"Conteos: {actual}")
+print(f"Índice lateral: {len(linked)} tablas enlazadas; título DB Test")
 print(f"Archivos requeridos: {len(required)}/{len(required)}")
 print(f"Rutas locales válidas: {len(parser.targets)}; rutas absolutas o faltantes: 0")
 print("Patrones sensibles: " + ", ".join(f"{key}={value}" for key,value in patterns.items()))

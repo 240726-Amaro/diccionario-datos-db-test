@@ -1,17 +1,79 @@
 {
-  "database": "BD19",
+  "database": "db_test",
+  "backup": "BD23",
+  "catalog_values": {
+    "tbc_payment_methods_types": [
+      {
+        "ID": 1,
+        "code": "DEBIT_CARD",
+        "description": "Tarjeta de débito"
+      },
+      {
+        "ID": 2,
+        "code": "CREDIT_CARD",
+        "description": "Tarjeta de crédito"
+      },
+      {
+        "ID": 3,
+        "code": "DIGITAL_CARD",
+        "description": "Tarjeta digital (Spin by OXXO)"
+      },
+      {
+        "ID": 4,
+        "code": "SPEI_TRANSFER",
+        "description": "Cuenta para transferencia SPEI"
+      },
+      {
+        "ID": 5,
+        "code": "GIFT_COUPON",
+        "description": "Cupón de regalo"
+      }
+    ],
+    "tbc_payment_methods": [
+      {
+        "ID": 1,
+        "name": "Tarjeta de débito",
+        "description": "Método simulado con tarjeta de débito"
+      },
+      {
+        "ID": 2,
+        "name": "Tarjeta de crédito",
+        "description": "Método simulado con tarjeta de crédito (permite meses)"
+      },
+      {
+        "ID": 3,
+        "name": "Tarjeta digital Spin",
+        "description": "Método simulado con tarjeta digital Spin by OXXO"
+      },
+      {
+        "ID": 4,
+        "name": "Transferencia SPEI",
+        "description": "Método simulado con transferencia SPEI"
+      },
+      {
+        "ID": 5,
+        "name": "Efectivo",
+        "description": "Pago único de contado en efectivo"
+      },
+      {
+        "ID": 6,
+        "name": "Cupón de regalo",
+        "description": "Pago con cupón de regalo"
+      }
+    ]
+  },
   "mysql_version": "8.0.45",
-  "source": "Practica03/backups/BD19.sql",
-  "source_date": "2026-11-04",
-  "source_modified": "2026-11-04 18:11:43 -06:00",
+  "source": "Practica04/backups/BD23.sql",
+  "source_date": "2026-11-19",
+  "source_modified": "2026-11-19 10:41:01 -06:00",
   "extraction_scope": "CREATE TABLE (incluye índices, claves y CHECK declarados en tabla), CREATE/ALTER TABLE y CREATE INDEX si existen, además de VIEW/TRIGGER/PROCEDURE/FUNCTION. INSERT INTO se descarta durante extracción de esquema.",
   "counts": {
-    "tables": 29,
+    "tables": 26,
     "views": 25,
     "triggers": 75,
-    "procedures": 8,
-    "functions": 15,
-    "columns": 213,
+    "procedures": 6,
+    "functions": 10,
+    "columns": 202,
     "foreign_keys": 38,
     "derived_columns": 1
   },
@@ -19,7 +81,7 @@
     {
       "kind": "table",
       "name": "tb_buyer_orders",
-      "sql": "CREATE TABLE `tb_buyer_orders` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `seller_ID` int NOT NULL,\n  `subtotal` decimal(12,2) NOT NULL DEFAULT '0.00',\n  `shipping_cost` decimal(12,2) NOT NULL DEFAULT '0.00',\n  `fulfillment_status` enum('Pending','Accepted','Preparing','Sent','Delivered','Canceled','Returned') NOT NULL DEFAULT 'Pending',\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_seller_orders_seller` (`seller_ID`),\n  CONSTRAINT `fk_seller_orders_seller` FOREIGN KEY (`seller_ID`) REFERENCES `tb_users` (`ID`),\n  CONSTRAINT `chk_seller_orders_shipping` CHECK ((`shipping_cost` >= 0)),\n  CONSTRAINT `chk_seller_orders_subtotal` CHECK ((`subtotal` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_buyer_orders` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `order_ID` int unsigned NOT NULL,\n  `seller_ID` int NOT NULL,\n  `subtotal` decimal(12,2) NOT NULL DEFAULT '0.00',\n  `shipping_cost` decimal(12,2) NOT NULL DEFAULT '0.00',\n  `fulfillment_status` enum('Pending','Accepted','Preparing','Sent','Delivered','Canceled','Returned') NOT NULL DEFAULT 'Pending',\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_buyer_orders_order_seller` (`order_ID`,`seller_ID`),\n  KEY `fk_seller_orders_seller` (`seller_ID`),\n  CONSTRAINT `fk_buyer_orders_order` FOREIGN KEY (`order_ID`) REFERENCES `tb_orders` (`ID`),\n  CONSTRAINT `fk_seller_orders_seller` FOREIGN KEY (`seller_ID`) REFERENCES `tb_users` (`ID`),\n  CONSTRAINT `chk_seller_orders_shipping` CHECK ((`shipping_cost` >= 0)),\n  CONSTRAINT `chk_seller_orders_subtotal` CHECK ((`subtotal` >= 0))\n) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -40,21 +102,39 @@
           }
         },
         {
+          "name": "order_ID",
+          "type": "int unsigned",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "FK → tb_orders.ID; UK compuesta (order_ID, seller_ID)",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "FK → tb_orders.ID; UK compuesta (order_ID, seller_ID)",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "order_ID = {dígito}",
+            "dominio": "order_ID ∈ {tb_orders.ID}; ON DELETE sin acción",
+            "descripcion_detallada": "Identifica la orden principal a la que pertenece esta suborden de vendedor; FK a tb_orders.ID. Es obligatorio y forma, junto con seller_ID, la llave única uk_buyer_orders_order_seller: una orden tiene una suborden por vendedor (relación 1:N orden-subórdenes)."
+          }
+        },
+        {
           "name": "seller_ID",
           "type": "int",
           "nullable": "NO",
           "default": "Sin dato declarado",
           "extra": "—",
-          "key": "FK → tb_users.ID",
+          "key": "FK → tb_users.ID; UK compuesta (order_ID, seller_ID)",
           "classification": {
             "valor": "Monovalor",
             "origen": "Almacenado",
             "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "FK → tb_users.ID",
+            "llave": "FK → tb_users.ID; UK compuesta (order_ID, seller_ID)",
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "seller_ID = {dígito}",
             "dominio": "seller_ID ∈ {tb_users.ID}; ON DELETE sin acción",
-            "descripcion_detallada": "Identifica o enlaza el registro con `tb_users.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
+            "descripcion_detallada": "Identifica al vendedor responsable de esta suborden; FK a tb_users.ID. Junto con order_ID no puede repetirse dentro de la misma orden."
           }
         },
         {
@@ -166,28 +246,28 @@
           }
         }
       ],
-      "description_detailed": "Conserva las órdenes del flujo de compra asociadas al vendedor, sus importes y su etapa de cumplimiento; el DDL no contiene una columna de comprador. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_users`, `tb_order_cancellations`, `tb_returns`, `tb_shipments`, `tbd_order_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`shipping_cost` >= 0)); ((`subtotal` >= 0)); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_ordenes_comprador; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_buyer_orders_after_insert, trg_tb_buyer_orders_after_update, trg_tb_buyer_orders_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
-      "formal_notation": "tb_buyer_orders = @ID + #seller_ID + subtotal + shipping_cost + fulfillment_status + status + creation_date + last_update"
+      "description_detailed": "Representa la suborden de un vendedor dentro de una orden principal: cada orden de tb_orders se divide en una suborden por vendedor (UNIQUE order_ID + seller_ID), con su subtotal, costo de envío y etapa de cumplimiento. El comprador se obtiene a través de order_ID → tb_orders.user_id. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_orders`, `tb_users`, `tb_order_cancellations`, `tb_returns`, `tb_shipments`, `tbd_order_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`shipping_cost` >= 0)); ((`subtotal` >= 0)); UNIQUE UNIQUE KEY `uk_buyer_orders_order_seller` (`order_ID`,`seller_ID`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_ordenes_comprador; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_buyer_orders_after_insert, trg_tb_buyer_orders_after_update, trg_tb_buyer_orders_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "formal_notation": "tb_buyer_orders = @ID + #order_ID + #seller_ID + subtotal + shipping_cost + fulfillment_status + status + creation_date + last_update"
     },
     {
       "kind": "trigger",
       "name": "trg_tb_buyer_orders_after_insert",
-      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_buyer_orders_after_insert` AFTER INSERT ON `tb_buyer_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES (\n        'tb_buyer_orders', 'Create', USER(), CURRENT_TIMESTAMP,\n        CONCAT(\n            'Orden de comprador creado. ', 'ID=', NEW.ID,\n            ', seller_ID=', COALESCE(NEW.seller_ID, 'NULL'),\n            ', subtotal=', COALESCE(NEW.subtotal, 'NULL'),\n            ', shipping_cost=', COALESCE(NEW.shipping_cost, 'NULL'),\n            ', fulfillment_status=', COALESCE(NEW.fulfillment_status, 'NULL'),\n            ', status=', COALESCE(CAST(NEW.status AS UNSIGNED), 'NULL')\n        ),\n        b'1'\n    );\nEND */;;\n"
+      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_buyer_orders_after_insert` AFTER INSERT ON `tb_buyer_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES ('tb_buyer_orders', 'Create', USER(), CURRENT_TIMESTAMP,\n        CONCAT('Orden de comprador creado. ID=', NEW.ID,\n               ', order_ID=', COALESCE(NEW.order_ID, 'NULL'),\n               ', seller_ID=', COALESCE(NEW.seller_ID, 'NULL'),\n               ', subtotal=', COALESCE(NEW.subtotal, 'NULL'),\n               ', shipping_cost=', COALESCE(NEW.shipping_cost, 'NULL'),\n               ', fulfillment_status=', COALESCE(NEW.fulfillment_status, 'NULL'),\n               ', status=', COALESCE(CAST(NEW.status AS UNSIGNED), 'NULL')),\n        b'1');\nEND */;;\n"
     },
     {
       "kind": "trigger",
       "name": "trg_tb_buyer_orders_after_update",
-      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_buyer_orders_after_update` AFTER UPDATE ON `tb_buyer_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES (\n        'tb_buyer_orders', 'Update', USER(), CURRENT_TIMESTAMP,\n        CONCAT(\n            'Orden de comprador actualizado. ', 'ID=', NEW.ID,\n            '. Cambios: ',\n            CONCAT_WS(', ',\n                IF(NOT (OLD.seller_ID <=> NEW.seller_ID), CONCAT('seller_ID: [', COALESCE(OLD.seller_ID, 'NULL'), '] -> [', COALESCE(NEW.seller_ID, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.subtotal <=> NEW.subtotal), CONCAT('subtotal: [', COALESCE(OLD.subtotal, 'NULL'), '] -> [', COALESCE(NEW.subtotal, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.shipping_cost <=> NEW.shipping_cost), CONCAT('shipping_cost: [', COALESCE(OLD.shipping_cost, 'NULL'), '] -> [', COALESCE(NEW.shipping_cost, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.fulfillment_status <=> NEW.fulfillment_status), CONCAT('fulfillment_status: [', COALESCE(OLD.fulfillment_status, 'NULL'), '] -> [', COALESCE(NEW.fulfillment_status, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.status <=> NEW.status), CONCAT('status: [', COALESCE(CAST(OLD.status AS UNSIGNED), 'NULL'), '] -> [', COALESCE(CAST(NEW.status AS UNSIGNED), 'NULL'), ']'), NULL)\n            )\n        ),\n        b'1'\n    );\nEND */;;\n"
+      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_buyer_orders_after_update` AFTER UPDATE ON `tb_buyer_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES ('tb_buyer_orders', 'Update', USER(), CURRENT_TIMESTAMP,\n        CONCAT('Orden de comprador actualizado. ID=', NEW.ID, '. Cambios: ',\n            CONCAT_WS(', ',\n                IF(NOT (OLD.order_ID <=> NEW.order_ID), CONCAT('order_ID: [', COALESCE(OLD.order_ID, 'NULL'), '] -> [', COALESCE(NEW.order_ID, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.seller_ID <=> NEW.seller_ID), CONCAT('seller_ID: [', COALESCE(OLD.seller_ID, 'NULL'), '] -> [', COALESCE(NEW.seller_ID, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.subtotal <=> NEW.subtotal), CONCAT('subtotal: [', COALESCE(OLD.subtotal, 'NULL'), '] -> [', COALESCE(NEW.subtotal, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.shipping_cost <=> NEW.shipping_cost), CONCAT('shipping_cost: [', COALESCE(OLD.shipping_cost, 'NULL'), '] -> [', COALESCE(NEW.shipping_cost, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.fulfillment_status <=> NEW.fulfillment_status), CONCAT('fulfillment_status: [', COALESCE(OLD.fulfillment_status, 'NULL'), '] -> [', COALESCE(NEW.fulfillment_status, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.status <=> NEW.status), CONCAT('status: [', COALESCE(CAST(OLD.status AS UNSIGNED), 'NULL'), '] -> [', COALESCE(CAST(NEW.status AS UNSIGNED), 'NULL'), ']'), NULL))),\n        b'1');\nEND */;;\n"
     },
     {
       "kind": "trigger",
       "name": "trg_tb_buyer_orders_after_delete",
-      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_buyer_orders_after_delete` AFTER DELETE ON `tb_buyer_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES (\n        'tb_buyer_orders', 'Delete', USER(), CURRENT_TIMESTAMP,\n        CONCAT(\n            'Orden de comprador eliminado. ', 'ID=', OLD.ID,\n            ', seller_ID=', COALESCE(OLD.seller_ID, 'NULL'),\n            ', subtotal=', COALESCE(OLD.subtotal, 'NULL'),\n            ', shipping_cost=', COALESCE(OLD.shipping_cost, 'NULL'),\n            ', fulfillment_status=', COALESCE(OLD.fulfillment_status, 'NULL'),\n            ', status=', COALESCE(CAST(OLD.status AS UNSIGNED), 'NULL')\n        ),\n        b'1'\n    );\nEND */;;\n"
+      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_buyer_orders_after_delete` AFTER DELETE ON `tb_buyer_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES ('tb_buyer_orders', 'Delete', USER(), CURRENT_TIMESTAMP,\n        CONCAT('Orden de comprador eliminado. ID=', OLD.ID,\n               ', order_ID=', COALESCE(OLD.order_ID, 'NULL'),\n               ', seller_ID=', COALESCE(OLD.seller_ID, 'NULL'),\n               ', subtotal=', COALESCE(OLD.subtotal, 'NULL'),\n               ', fulfillment_status=', COALESCE(OLD.fulfillment_status, 'NULL')),\n        b'1');\nEND */;;\n"
     },
     {
       "kind": "table",
       "name": "tb_carts",
-      "sql": "CREATE TABLE `tb_carts` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `user_ID` int NOT NULL,\n  `status` bit(1) DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_cart_user` (`user_ID`),\n  CONSTRAINT `fk_carts_user` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_carts` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `user_ID` int NOT NULL,\n  `status` bit(1) DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `idx_cart_user` (`user_ID`),\n  CONSTRAINT `fk_carts_user` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -213,16 +293,16 @@
           "nullable": "NO",
           "default": "Sin dato declarado",
           "extra": "—",
-          "key": "FK → tb_users.ID; UK",
+          "key": "FK → tb_users.ID",
           "classification": {
             "valor": "Monovalor",
             "origen": "Almacenado",
             "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "FK → tb_users.ID; UK",
+            "llave": "FK → tb_users.ID",
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "user_ID = {dígito}",
             "dominio": "user_ID ∈ {tb_users.ID}; ON DELETE sin acción",
-            "descripcion_detallada": "Identifica o enlaza el registro con `tb_users.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
+            "descripcion_detallada": "Identifica al usuario dueño del carrito; FK a tb_users.ID. Desde BD23 el índice idx_cart_user no es único, por lo que un usuario puede tener varios carritos."
           }
         },
         {
@@ -280,7 +360,7 @@
           }
         }
       ],
-      "description_detailed": "Representa el carrito activo o histórico de un usuario para agrupar artículos antes de convertirlos en orden. Pertenece al módulo de carritos (inferido por el nombre). Se relaciona con `tb_users`, `tbd_carts_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `uk_cart_user` (`user_ID`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_carritos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_carts_after_insert, trg_tb_carts_after_update, trg_tb_carts_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Representa un carrito de un usuario para agrupar artículos antes de convertirlos en orden; desde BD23 un usuario puede tener varios carritos (índice idx_cart_user no único) y cada carrito se convierte, como máximo, en una orden (tb_orders.cart_ID UNIQUE). Pertenece al módulo de carritos (inferido por el nombre). Se relaciona con `tb_users`, `tb_orders`, `tbd_carts_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_carritos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_carts_after_insert, trg_tb_carts_after_update, trg_tb_carts_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_carts = @ID + #user_ID + status + creation_date + last_update"
     },
     {
@@ -301,7 +381,7 @@
     {
       "kind": "table",
       "name": "tb_logs",
-      "sql": "CREATE TABLE `tb_logs` (\n  `ID` int NOT NULL AUTO_INCREMENT,\n  `table_name` varchar(100) NOT NULL,\n  `operation` enum('Create','Read','Update','Delete') NOT NULL,\n  `db_user` varchar(80) NOT NULL,\n  `description` text NOT NULL,\n  `operation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `operation_status` bit(1) DEFAULT b'1',\n  PRIMARY KEY (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=65633 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_logs` (\n  `ID` int NOT NULL AUTO_INCREMENT,\n  `table_name` varchar(100) NOT NULL,\n  `operation` enum('Create','Read','Update','Delete') NOT NULL,\n  `db_user` varchar(80) NOT NULL,\n  `description` text NOT NULL,\n  `operation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `operation_status` bit(1) DEFAULT b'1',\n  PRIMARY KEY (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=86190 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -436,7 +516,7 @@
     {
       "kind": "table",
       "name": "tb_order_cancellations",
-      "sql": "CREATE TABLE `tb_order_cancellations` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `buyer_order_ID` int unsigned NOT NULL,\n  `user_ID` int NOT NULL,\n  `reason` varchar(500) NOT NULL,\n  `cancellation_status` enum('Requested','Approved','Rejected','Completed') NOT NULL DEFAULT 'Requested',\n  `request_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_cancellations_buyer_order` (`buyer_order_ID`),\n  KEY `fk_cancellations_user` (`user_ID`),\n  CONSTRAINT `fk_cancellations_buyer_order` FOREIGN KEY (`buyer_order_ID`) REFERENCES `tb_buyer_orders` (`ID`),\n  CONSTRAINT `fk_cancellations_user` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_order_cancellations` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `buyer_order_ID` int unsigned NOT NULL,\n  `user_ID` int NOT NULL,\n  `reason` varchar(500) NOT NULL,\n  `cancellation_status` enum('Requested','Approved','Rejected','Completed') NOT NULL DEFAULT 'Requested',\n  `request_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_cancellations_buyer_order` (`buyer_order_ID`),\n  KEY `fk_cancellations_user` (`user_ID`),\n  CONSTRAINT `fk_cancellations_buyer_order` FOREIGN KEY (`buyer_order_ID`) REFERENCES `tb_buyer_orders` (`ID`),\n  CONSTRAINT `fk_cancellations_user` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -604,7 +684,7 @@
     {
       "kind": "table",
       "name": "tb_orders",
-      "sql": "CREATE TABLE `tb_orders` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `user_id` int NOT NULL,\n  `total_amount` decimal(10,2) NOT NULL DEFAULT '0.00',\n  `status` enum('Pending','Processing','Shipped','Delivered','Cancelled') NOT NULL DEFAULT 'Pending',\n  `shipping_address` text,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_orders_user` (`user_id`),\n  CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`) REFERENCES `tb_users` (`ID`) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_orders` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `user_id` int NOT NULL,\n  `cart_ID` int unsigned NOT NULL,\n  `total_amount` decimal(10,2) NOT NULL DEFAULT '0.00',\n  `status` enum('Pending','Processing','Shipped','Delivered','Cancelled') NOT NULL DEFAULT 'Pending',\n  `shipping_address` text,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_orders_cart` (`cart_ID`),\n  KEY `fk_orders_user` (`user_id`),\n  CONSTRAINT `fk_orders_cart` FOREIGN KEY (`cart_ID`) REFERENCES `tb_carts` (`ID`),\n  CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`) REFERENCES `tb_users` (`ID`) ON DELETE CASCADE\n) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -643,6 +723,24 @@
           }
         },
         {
+          "name": "cart_ID",
+          "type": "int unsigned",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "FK → tb_carts.ID; UK",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "FK → tb_carts.ID; UK",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "cart_ID = {dígito}",
+            "dominio": "cart_ID ∈ {tb_carts.ID}; ON DELETE sin acción",
+            "descripcion_detallada": "Identifica el carrito del que se generó la orden; FK a tb_carts.ID. Es obligatorio y UNIQUE (uk_orders_cart), por lo que cada carrito produce como máximo una orden y cada orden proviene de exactamente un carrito (relación 1:1)."
+          }
+        },
+        {
           "name": "total_amount",
           "type": "decimal(10,2)",
           "nullable": "NO",
@@ -651,7 +749,7 @@
           "key": "No",
           "classification": {
             "valor": "Monovalor",
-            "origen": "Almacenado (derivable de la suma de tbd_order_details.subtotal; fórmula no declarada, inferido)",
+            "origen": "Almacenado (derivable de la suma de subtotal + shipping_cost de sus tb_buyer_orders; fórmula no declarada, inferido)",
             "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT '0.00')",
             "llave": "No",
             "naturaleza": "Cuantitativa continua",
@@ -733,28 +831,28 @@
           }
         }
       ],
-      "description_detailed": "Representa órdenes del modelo principal vinculadas a una cuenta, con importe, estado y dirección de envío en texto. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_users`, `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales fk_orders_user ON DELETE CASCADE; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_ordenes; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_orders_after_insert, trg_tb_orders_after_update, trg_tb_orders_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
-      "formal_notation": "tb_orders = @ID + #user_id + total_amount + status + shipping_address + creation_date + last_update"
+      "description_detailed": "Representa la orden principal de un comprador, generada a partir de exactamente un carrito (cart_ID NOT NULL UNIQUE, relación 1:1 carrito-orden), con importe total, estado y dirección de envío en texto; se divide en subórdenes por vendedor en tb_buyer_orders y se liquida con tb_payments. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_carts`, `tb_users`, `tb_buyer_orders`, `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `uk_orders_cart` (`cart_ID`); acciones referenciales fk_orders_user ON DELETE CASCADE; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_ordenes; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_orders_after_insert, trg_tb_orders_after_update, trg_tb_orders_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "formal_notation": "tb_orders = @ID + #user_id + #cart_ID + total_amount + status + shipping_address + creation_date + last_update"
     },
     {
       "kind": "trigger",
       "name": "trg_tb_orders_after_insert",
-      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_orders_after_insert` AFTER INSERT ON `tb_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES (\n        'tb_orders', 'Create', USER(), CURRENT_TIMESTAMP,\n        CONCAT(\n            'Orden creado. ', 'ID=', NEW.ID,\n            ', user_id=', COALESCE(NEW.user_id, 'NULL'),\n            ', total_amount=', COALESCE(NEW.total_amount, 'NULL'),\n            ', status=', COALESCE(NEW.status, 'NULL')\n        ),\n        b'1'\n    );\nEND */;;\n"
+      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_orders_after_insert` AFTER INSERT ON `tb_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES ('tb_orders', 'Create', USER(), CURRENT_TIMESTAMP,\n        CONCAT('Orden creado. ID=', NEW.ID,\n               ', user_id=', COALESCE(NEW.user_id, 'NULL'),\n               ', cart_ID=', COALESCE(NEW.cart_ID, 'NULL'),\n               ', total_amount=', COALESCE(NEW.total_amount, 'NULL'),\n               ', status=', COALESCE(NEW.status, 'NULL')),\n        b'1');\nEND */;;\n"
     },
     {
       "kind": "trigger",
       "name": "trg_tb_orders_after_update",
-      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_orders_after_update` AFTER UPDATE ON `tb_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES (\n        'tb_orders', 'Update', USER(), CURRENT_TIMESTAMP,\n        CONCAT(\n            'Orden actualizado. ', 'ID=', NEW.ID,\n            '. Cambios: ',\n            CONCAT_WS(', ',\n                IF(NOT (OLD.user_id <=> NEW.user_id), CONCAT('user_id: [', COALESCE(OLD.user_id, 'NULL'), '] -> [', COALESCE(NEW.user_id, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.total_amount <=> NEW.total_amount), CONCAT('total_amount: [', COALESCE(OLD.total_amount, 'NULL'), '] -> [', COALESCE(NEW.total_amount, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.status <=> NEW.status), CONCAT('status: [', COALESCE(OLD.status, 'NULL'), '] -> [', COALESCE(NEW.status, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.shipping_address <=> NEW.shipping_address), 'shipping_address modificado', NULL)\n            )\n        ),\n        b'1'\n    );\nEND */;;\n"
+      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_orders_after_update` AFTER UPDATE ON `tb_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES ('tb_orders', 'Update', USER(), CURRENT_TIMESTAMP,\n        CONCAT('Orden actualizado. ID=', NEW.ID, '. Cambios: ',\n            CONCAT_WS(', ',\n                IF(NOT (OLD.user_id <=> NEW.user_id), CONCAT('user_id: [', COALESCE(OLD.user_id, 'NULL'), '] -> [', COALESCE(NEW.user_id, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.cart_ID <=> NEW.cart_ID), CONCAT('cart_ID: [', COALESCE(OLD.cart_ID, 'NULL'), '] -> [', COALESCE(NEW.cart_ID, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.total_amount <=> NEW.total_amount), CONCAT('total_amount: [', COALESCE(OLD.total_amount, 'NULL'), '] -> [', COALESCE(NEW.total_amount, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.status <=> NEW.status), CONCAT('status: [', COALESCE(OLD.status, 'NULL'), '] -> [', COALESCE(NEW.status, 'NULL'), ']'), NULL),\n                IF(NOT (OLD.shipping_address <=> NEW.shipping_address), 'shipping_address modificado', NULL))),\n        b'1');\nEND */;;\n"
     },
     {
       "kind": "trigger",
       "name": "trg_tb_orders_after_delete",
-      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_orders_after_delete` AFTER DELETE ON `tb_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES (\n        'tb_orders', 'Delete', USER(), CURRENT_TIMESTAMP,\n        CONCAT(\n            'Orden eliminado. ', 'ID=', OLD.ID,\n            ', user_id=', COALESCE(OLD.user_id, 'NULL'),\n            ', total_amount=', COALESCE(OLD.total_amount, 'NULL'),\n            ', status=', COALESCE(OLD.status, 'NULL')\n        ),\n        b'1'\n    );\nEND */;;\n"
+      "sql": "/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `trg_tb_orders_after_delete` AFTER DELETE ON `tb_orders` FOR EACH ROW BEGIN\n    INSERT INTO tb_logs (table_name, operation, db_user, operation_date, description, operation_status)\n    VALUES ('tb_orders', 'Delete', USER(), CURRENT_TIMESTAMP,\n        CONCAT('Orden eliminado. ID=', OLD.ID,\n               ', user_id=', COALESCE(OLD.user_id, 'NULL'),\n               ', cart_ID=', COALESCE(OLD.cart_ID, 'NULL'),\n               ', total_amount=', COALESCE(OLD.total_amount, 'NULL'),\n               ', status=', COALESCE(OLD.status, 'NULL')),\n        b'1');\nEND */;;\n"
     },
     {
       "kind": "table",
       "name": "tb_payment_transaction",
-      "sql": "CREATE TABLE `tb_payment_transaction` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `payment_ID` int unsigned NOT NULL,\n  `transaction_type` enum('Charge','Refund','Void') NOT NULL DEFAULT 'Charge',\n  `amount` decimal(10,2) NOT NULL,\n  `transaction_status` enum('Pending','Completed','Failed') NOT NULL DEFAULT 'Pending',\n  `gateway_reference` varchar(150) DEFAULT NULL,\n  `response_message` varchar(500) DEFAULT NULL,\n  `transaction_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_payment_transaction_payment` (`payment_ID`),\n  CONSTRAINT `fk_payment_transaction_payment` FOREIGN KEY (`payment_ID`) REFERENCES `tb_payments` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_payment_transaction` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `payment_ID` int unsigned NOT NULL,\n  `transaction_type` enum('Charge','Refund','Void') NOT NULL DEFAULT 'Charge',\n  `amount` decimal(10,2) NOT NULL,\n  `transaction_status` enum('Pending','Completed','Failed') NOT NULL DEFAULT 'Pending',\n  `gateway_reference` varchar(150) DEFAULT NULL,\n  `response_message` varchar(500) DEFAULT NULL,\n  `transaction_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_payment_transaction_payment` (`payment_ID`),\n  CONSTRAINT `fk_payment_transaction_payment` FOREIGN KEY (`payment_ID`) REFERENCES `tb_payments` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -958,7 +1056,7 @@
     {
       "kind": "table",
       "name": "tb_payments",
-      "sql": "CREATE TABLE `tb_payments` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `order_id` int unsigned NOT NULL,\n  `payment_method_id` int unsigned NOT NULL,\n  `user_payment_method_ID` bigint unsigned DEFAULT NULL,\n  `amount` decimal(10,2) NOT NULL,\n  `payment_status` enum('Pending','Completed','Failed','Refunded') NOT NULL DEFAULT 'Pending',\n  `transaction_reference` varchar(150) DEFAULT NULL,\n  `payment_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_payments_order` (`order_id`),\n  KEY `fk_payments_method` (`payment_method_id`),\n  KEY `fk_payments_user_method` (`user_payment_method_ID`),\n  CONSTRAINT `fk_payments_method` FOREIGN KEY (`payment_method_id`) REFERENCES `tbc_payment_methods` (`ID`),\n  CONSTRAINT `fk_payments_order` FOREIGN KEY (`order_id`) REFERENCES `tb_orders` (`ID`) ON DELETE CASCADE,\n  CONSTRAINT `fk_payments_user_method` FOREIGN KEY (`user_payment_method_ID`) REFERENCES `tbd_user_payment_methods` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_payments` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `order_id` int unsigned NOT NULL,\n  `payment_method_id` int unsigned NOT NULL,\n  `user_payment_method_ID` bigint unsigned DEFAULT NULL,\n  `amount` decimal(10,2) NOT NULL,\n  `payment_status` enum('Pending','Completed','Failed','Refunded') NOT NULL DEFAULT 'Pending',\n  `transaction_reference` varchar(150) DEFAULT NULL,\n  `payment_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_payments_order` (`order_id`),\n  KEY `fk_payments_method` (`payment_method_id`),\n  KEY `fk_payments_user_method` (`user_payment_method_ID`),\n  CONSTRAINT `fk_payments_method` FOREIGN KEY (`payment_method_id`) REFERENCES `tbc_payment_methods` (`ID`),\n  CONSTRAINT `fk_payments_order` FOREIGN KEY (`order_id`) REFERENCES `tb_orders` (`ID`) ON DELETE CASCADE,\n  CONSTRAINT `fk_payments_user_method` FOREIGN KEY (`user_payment_method_ID`) REFERENCES `tbd_user_payment_methods` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -1126,7 +1224,7 @@
     {
       "kind": "table",
       "name": "tb_people",
-      "sql": "CREATE TABLE `tb_people` (\n  `person_ID` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `user_ID` int NOT NULL,\n  `courtesy_title_ID` char(10) DEFAULT NULL,\n  `given_names` varchar(150) NOT NULL,\n  `family_names` varchar(150) NOT NULL,\n  `birth_date` date DEFAULT NULL,\n  `gender_ID` tinyint unsigned DEFAULT NULL,\n  `country_code` char(2) DEFAULT NULL,\n  `phone` varchar(25) DEFAULT NULL,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`person_ID`),\n  KEY `fk_people_user` (`user_ID`),\n  CONSTRAINT `fk_people_user` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`),\n  CONSTRAINT `chk_gender_values` CHECK ((`gender_ID` in (1,2,3)))\n) ENGINE=InnoDB AUTO_INCREMENT=10226 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_people` (\n  `person_ID` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `user_ID` int NOT NULL,\n  `courtesy_title_ID` char(10) DEFAULT NULL,\n  `given_names` varchar(150) NOT NULL,\n  `family_names` varchar(150) NOT NULL,\n  `birth_date` date DEFAULT NULL,\n  `gender_ID` tinyint unsigned DEFAULT NULL,\n  `country_code` char(2) DEFAULT NULL,\n  `phone` varchar(25) DEFAULT NULL,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`person_ID`),\n  KEY `fk_people_user` (`user_ID`),\n  CONSTRAINT `fk_people_user` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`),\n  CONSTRAINT `chk_gender_values` CHECK ((`gender_ID` in (1,2,3)))\n) ENGINE=InnoDB AUTO_INCREMENT=10227 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "person_ID",
@@ -1495,7 +1593,7 @@
           }
         }
       ],
-      "description_detailed": "Mantiene el catálogo de productos con SKU, descripción, precio vigente, existencias y estado de publicación. Pertenece al módulo de productos (inferido por el nombre). Se relaciona con `tbd_products_categories`, `tbd_products_users_providers`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `SKU` (`SKU`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_productos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_products_after_insert, trg_products_after_update, trg_products_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Mantiene el catálogo de productos con SKU, descripción, precio vigente, existencias y estado de publicación. Pertenece al módulo de productos (inferido por el nombre). Se relaciona con `tbd_products_categories`, `tbd_products_users_providers`, `tbd_users_wishlist_products`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `SKU` (`SKU`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_productos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_products_after_insert, trg_products_after_update, trg_products_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_products = @ID + SKU + name + description + current_price + current_stock + status + creation_date + last_update"
     },
     {
@@ -1516,7 +1614,7 @@
     {
       "kind": "table",
       "name": "tb_refunds",
-      "sql": "CREATE TABLE `tb_refunds` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `payment_ID` int unsigned NOT NULL,\n  `return_ID` int unsigned DEFAULT NULL,\n  `cancellation_ID` int unsigned DEFAULT NULL,\n  `amount` decimal(10,2) NOT NULL,\n  `refund_status` enum('Pending','Processed','Rejected') NOT NULL DEFAULT 'Pending',\n  `reason` varchar(500) DEFAULT NULL,\n  `refund_date` datetime DEFAULT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_refunds_payment` (`payment_ID`),\n  KEY `fk_refunds_return` (`return_ID`),\n  KEY `fk_refunds_cancellation` (`cancellation_ID`),\n  CONSTRAINT `fk_refunds_cancellation` FOREIGN KEY (`cancellation_ID`) REFERENCES `tb_order_cancellations` (`ID`),\n  CONSTRAINT `fk_refunds_payment` FOREIGN KEY (`payment_ID`) REFERENCES `tb_payments` (`ID`),\n  CONSTRAINT `fk_refunds_return` FOREIGN KEY (`return_ID`) REFERENCES `tb_returns` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_refunds` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `payment_ID` int unsigned NOT NULL,\n  `return_ID` int unsigned DEFAULT NULL,\n  `cancellation_ID` int unsigned DEFAULT NULL,\n  `amount` decimal(10,2) NOT NULL,\n  `refund_status` enum('Pending','Processed','Rejected') NOT NULL DEFAULT 'Pending',\n  `reason` varchar(500) DEFAULT NULL,\n  `refund_date` datetime DEFAULT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_refunds_payment` (`payment_ID`),\n  KEY `fk_refunds_return` (`return_ID`),\n  KEY `fk_refunds_cancellation` (`cancellation_ID`),\n  CONSTRAINT `fk_refunds_cancellation` FOREIGN KEY (`cancellation_ID`) REFERENCES `tb_order_cancellations` (`ID`),\n  CONSTRAINT `fk_refunds_payment` FOREIGN KEY (`payment_ID`) REFERENCES `tb_payments` (`ID`),\n  CONSTRAINT `fk_refunds_return` FOREIGN KEY (`return_ID`) REFERENCES `tb_returns` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -1720,7 +1818,7 @@
     {
       "kind": "table",
       "name": "tb_returns",
-      "sql": "CREATE TABLE `tb_returns` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `buyer_order_ID` int unsigned NOT NULL,\n  `user_ID` int NOT NULL,\n  `reason` varchar(500) NOT NULL,\n  `return_status` enum('Requested','Approved','Rejected','Received','Refunded') NOT NULL DEFAULT 'Requested',\n  `request_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_returns_buyer_order` (`buyer_order_ID`),\n  KEY `fk_returns_user` (`user_ID`),\n  CONSTRAINT `fk_returns_buyer_order` FOREIGN KEY (`buyer_order_ID`) REFERENCES `tb_buyer_orders` (`ID`),\n  CONSTRAINT `fk_returns_user` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_returns` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `buyer_order_ID` int unsigned NOT NULL,\n  `user_ID` int NOT NULL,\n  `reason` varchar(500) NOT NULL,\n  `return_status` enum('Requested','Approved','Rejected','Received','Refunded') NOT NULL DEFAULT 'Requested',\n  `request_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_returns_buyer_order` (`buyer_order_ID`),\n  KEY `fk_returns_user` (`user_ID`),\n  CONSTRAINT `fk_returns_buyer_order` FOREIGN KEY (`buyer_order_ID`) REFERENCES `tb_buyer_orders` (`ID`),\n  CONSTRAINT `fk_returns_user` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -1888,7 +1986,7 @@
     {
       "kind": "table",
       "name": "tb_shipments",
-      "sql": "CREATE TABLE `tb_shipments` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `buyer_order_ID` int unsigned NOT NULL,\n  `address_ID` bigint unsigned NOT NULL,\n  `carrier` varchar(100) DEFAULT NULL,\n  `tracking_number` varchar(100) DEFAULT NULL,\n  `shipment_status` enum('Preparing','Shipped','In transit','Delivered','Returned') NOT NULL DEFAULT 'Preparing',\n  `shipped_date` datetime DEFAULT NULL,\n  `estimated_delivery_date` datetime DEFAULT NULL,\n  `delivered_date` datetime DEFAULT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_shipments_buyer_order` (`buyer_order_ID`),\n  KEY `fk_shipments_address` (`address_ID`),\n  CONSTRAINT `fk_shipments_address` FOREIGN KEY (`address_ID`) REFERENCES `tb_user_addresses` (`ID`),\n  CONSTRAINT `fk_shipments_buyer_order` FOREIGN KEY (`buyer_order_ID`) REFERENCES `tb_buyer_orders` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_shipments` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `buyer_order_ID` int unsigned NOT NULL,\n  `address_ID` bigint unsigned NOT NULL,\n  `carrier` varchar(100) DEFAULT NULL,\n  `tracking_number` varchar(100) DEFAULT NULL,\n  `shipment_status` enum('Preparing','Shipped','In transit','Failed attempt','At pickup point','Delivered','Returned') NOT NULL DEFAULT 'Preparing',\n  `shipped_date` datetime DEFAULT NULL,\n  `estimated_delivery_date` datetime DEFAULT NULL,\n  `delivered_date` datetime DEFAULT NULL,\n  `notes` varchar(500) DEFAULT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_shipments_buyer_order` (`buyer_order_ID`),\n  KEY `fk_shipments_address` (`address_ID`),\n  CONSTRAINT `fk_shipments_address` FOREIGN KEY (`address_ID`) REFERENCES `tb_user_addresses` (`ID`),\n  CONSTRAINT `fk_shipments_buyer_order` FOREIGN KEY (`buyer_order_ID`) REFERENCES `tb_buyer_orders` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -1982,7 +2080,7 @@
         },
         {
           "name": "shipment_status",
-          "type": "enum('Preparing','Shipped','In transit','Delivered','Returned')",
+          "type": "enum('Preparing','Shipped','In transit','Failed attempt','At pickup point','Delivered','Returned')",
           "nullable": "NO",
           "default": "'Preparing'",
           "extra": "—",
@@ -1993,9 +2091,9 @@
             "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT 'Preparing')",
             "llave": "No",
             "naturaleza": "Cualitativa ordinal",
-            "composicion_formal": "shipment_status = [ Preparing | Shipped | In transit | Delivered | Returned ]",
-            "dominio": "shipment_status ∈ {Preparing, Shipped, In transit, Delivered, Returned}; tipo enum('Preparing','Shipped','In transit','Delivered','Returned')",
-            "descripcion_detallada": "Registra la etapa logística del envío dentro del ENUM declarado. (inferido)."
+            "composicion_formal": "shipment_status = [ Preparing | Shipped | In transit | Failed attempt | At pickup point | Delivered | Returned ]",
+            "dominio": "shipment_status ∈ {Preparing, Shipped, In transit, Failed attempt, At pickup point, Delivered, Returned}; tipo enum('Preparing','Shipped','In transit','Failed attempt','At pickup point','Delivered','Returned')",
+            "descripcion_detallada": "Registra la etapa logística del envío: Preparing, Shipped, In transit, Failed attempt, At pickup point, Delivered o Returned según el ENUM; Failed attempt y At pickup point se agregaron en BD23 (inferido)."
           }
         },
         {
@@ -2053,6 +2151,24 @@
           }
         },
         {
+          "name": "notes",
+          "type": "varchar(500)",
+          "nullable": "Sí",
+          "default": "NULL",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Opcional (NULL); valor por sistema (DEFAULT NULL)",
+            "llave": "No",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "notes = {carácter}",
+            "dominio": "notes ∈ cadena(≤500); tipo varchar(500)",
+            "descripcion_detallada": "Guarda observaciones del seguimiento del envío, por ejemplo el motivo de un intento fallido o la ubicación del punto de recogida (inferido). Es opcional (NULL) y admite hasta 500 caracteres."
+          }
+        },
+        {
           "name": "creation_date",
           "type": "datetime",
           "nullable": "NO",
@@ -2089,8 +2205,8 @@
           }
         }
       ],
-      "description_detailed": "Registra el envío de una orden, la dirección de destino, la transportista, el rastreo y las fechas logísticas. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_user_addresses`, `tb_buyer_orders`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_envios; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_shipments_after_insert, trg_tb_shipments_after_update, trg_tb_shipments_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
-      "formal_notation": "tb_shipments = @ID + #buyer_order_ID + #address_ID + carrier + tracking_number + shipment_status + shipped_date + estimated_delivery_date + delivered_date + creation_date + last_update"
+      "description_detailed": "Registra el envío de una suborden de vendedor, la dirección de destino, la transportista, el rastreo, las fechas logísticas y notas de seguimiento; su estado admite intentos fallidos y entrega en punto de recogida. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_user_addresses`, `tb_buyer_orders`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_envios; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_shipments_after_insert, trg_tb_shipments_after_update, trg_tb_shipments_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "formal_notation": "tb_shipments = @ID + #buyer_order_ID + #address_ID + carrier + tracking_number + shipment_status + shipped_date + estimated_delivery_date + delivered_date + notes + creation_date + last_update"
     },
     {
       "kind": "trigger",
@@ -2110,7 +2226,7 @@
     {
       "kind": "table",
       "name": "tb_user_addresses",
-      "sql": "CREATE TABLE `tb_user_addresses` (\n  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `user_ID` int NOT NULL,\n  `address_label` varchar(100) NOT NULL,\n  `recipient_name` varchar(150) DEFAULT NULL,\n  `recipient_phone` varchar(25) DEFAULT NULL,\n  `delivery_instructions` varchar(500) DEFAULT NULL,\n  `latitude` decimal(10,7) DEFAULT NULL,\n  `longitude` decimal(10,7) DEFAULT NULL,\n  `is_default` tinyint(1) NOT NULL DEFAULT '0',\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `idx_user_addresses` (`user_ID`),\n  CONSTRAINT `fk_addresses_users` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`),\n  CONSTRAINT `chk_coordinates` CHECK ((((`latitude` is null) and (`longitude` is null)) or ((`latitude` is not null) and (`longitude` is not null)))),\n  CONSTRAINT `chk_latitude` CHECK ((`latitude` between -(90) and 90)),\n  CONSTRAINT `chk_longitude` CHECK ((`longitude` between -(180) and 180))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_user_addresses` (\n  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `user_ID` int NOT NULL,\n  `address_label` varchar(100) NOT NULL,\n  `recipient_name` varchar(150) DEFAULT NULL,\n  `recipient_phone` varchar(25) DEFAULT NULL,\n  `delivery_instructions` varchar(500) DEFAULT NULL,\n  `latitude` decimal(10,7) DEFAULT NULL,\n  `longitude` decimal(10,7) DEFAULT NULL,\n  `is_default` tinyint(1) NOT NULL DEFAULT '0',\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `idx_user_addresses` (`user_ID`),\n  CONSTRAINT `fk_addresses_users` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`),\n  CONSTRAINT `chk_coordinates` CHECK ((((`latitude` is null) and (`longitude` is null)) or ((`latitude` is not null) and (`longitude` is not null)))),\n  CONSTRAINT `chk_latitude` CHECK ((`latitude` between -(90) and 90)),\n  CONSTRAINT `chk_longitude` CHECK ((`longitude` between -(180) and 180))\n) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -2350,7 +2466,7 @@
     {
       "kind": "table",
       "name": "tb_users",
-      "sql": "CREATE TABLE `tb_users` (\n  `ID` int NOT NULL AUTO_INCREMENT,\n  `email` varchar(80) NOT NULL,\n  `nickname` varchar(100) NOT NULL,\n  `password` varchar(255) NOT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_login` datetime DEFAULT NULL,\n  `status` bit(1) DEFAULT b'1',\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `email` (`email`),\n  UNIQUE KEY `nickname` (`nickname`)\n) ENGINE=InnoDB AUTO_INCREMENT=10234 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tb_users` (\n  `ID` int NOT NULL AUTO_INCREMENT,\n  `email` varchar(80) NOT NULL,\n  `nickname` varchar(100) NOT NULL,\n  `password` varchar(255) NOT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_login` datetime DEFAULT NULL,\n  `status` bit(1) DEFAULT b'1',\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `email` (`email`),\n  UNIQUE KEY `nickname` (`nickname`)\n) ENGINE=InnoDB AUTO_INCREMENT=10235 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -2479,7 +2595,7 @@
           }
         }
       ],
-      "description_detailed": "Representa cuentas de acceso con correo, alias, hash de contraseña, fechas de actividad y estado. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_people`, `tb_buyer_orders`, `tb_carts`, `tb_order_cancellations`, `tb_orders`, `tb_returns`, `tb_user_addresses`, `tbd_products_users_providers`, `tbd_user_payment_methods`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `email` (`email`); UNIQUE KEY `nickname` (`nickname`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_usuarios_creados; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_users_after_insert, trg_users_after_update, trg_users_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Representa cuentas de acceso con correo, alias, hash de contraseña, fechas de actividad y estado. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tb_carts`, `tb_order_cancellations`, `tb_orders`, `tb_people`, `tb_returns`, `tb_user_addresses`, `tbd_products_users_providers`, `tbd_user_payment_methods`, `tbd_users_wishlist_products`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `email` (`email`); UNIQUE KEY `nickname` (`nickname`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_usuarios_creados; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_users_after_insert, trg_users_after_update, trg_users_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_users = @ID + email + nickname + password + creation_date + last_login + status"
     },
     {
@@ -2500,7 +2616,7 @@
     {
       "kind": "table",
       "name": "tbc_categories",
-      "sql": "CREATE TABLE `tbc_categories` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `name` varchar(120) NOT NULL,\n  `description` text,\n  `sup_id_category` int unsigned DEFAULT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `name` (`name`),\n  KEY `fk_superior_category` (`sup_id_category`),\n  CONSTRAINT `fk_superior_category` FOREIGN KEY (`sup_id_category`) REFERENCES `tbc_categories` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=272 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tbc_categories` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `name` varchar(120) NOT NULL,\n  `description` text,\n  `sup_id_category` int unsigned DEFAULT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `name` (`name`),\n  KEY `fk_superior_category` (`sup_id_category`),\n  CONSTRAINT `fk_superior_category` FOREIGN KEY (`sup_id_category`) REFERENCES `tbc_categories` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -2649,287 +2765,8 @@
     },
     {
       "kind": "table",
-      "name": "tbc_gen_country_profile",
-      "sql": "CREATE TABLE `tbc_gen_country_profile` (\n  `country_code` char(2) NOT NULL,\n  `country_name` varchar(60) NOT NULL,\n  `phone_prefix` varchar(6) NOT NULL,\n  `phone_digits` tinyint NOT NULL,\n  `title_male` varchar(10) NOT NULL,\n  `title_female` varchar(10) NOT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  PRIMARY KEY (`country_code`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
-      "columns": [
-        {
-          "name": "country_code",
-          "type": "char(2)",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "PK",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "PK",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "country_code = {carácter}",
-            "dominio": "country_code ∈ cadena(≤2); tipo char(2)",
-            "descripcion_detallada": "Código ISO de dos caracteres que identifica el país usado como clave del perfil de generación; permite relacionar los catálogos auxiliares con sus parámetros locales."
-          }
-        },
-        {
-          "name": "country_name",
-          "type": "varchar(60)",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "No",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "No",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "country_name = {carácter}",
-            "dominio": "country_name ∈ cadena(≤60); tipo varchar(60)",
-            "descripcion_detallada": "Nombre legible del país asociado al código country_code."
-          }
-        },
-        {
-          "name": "phone_prefix",
-          "type": "varchar(6)",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "No",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "No",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "phone_prefix = {carácter}",
-            "dominio": "phone_prefix ∈ cadena(≤6); tipo varchar(6)",
-            "descripcion_detallada": "Prefijo telefónico internacional que se antepone a los dígitos locales al generar teléfonos."
-          }
-        },
-        {
-          "name": "phone_digits",
-          "type": "tinyint",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "No",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "No",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "phone_digits = {entero}",
-            "dominio": "phone_digits ∈ ℤ; tipo tinyint",
-            "descripcion_detallada": "Cantidad de dígitos locales que deben generarse para completar el teléfono del país."
-          }
-        },
-        {
-          "name": "title_male",
-          "type": "varchar(10)",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "No",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "No",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "title_male = {carácter}",
-            "dominio": "title_male ∈ cadena(≤10); tipo varchar(10)",
-            "descripcion_detallada": "Título de cortesía que se asigna a personas del género masculino en el contexto del país."
-          }
-        },
-        {
-          "name": "title_female",
-          "type": "varchar(10)",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "No",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "No",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "title_female = {carácter}",
-            "dominio": "title_female ∈ cadena(≤10); tipo varchar(10)",
-            "descripcion_detallada": "Título de cortesía que se asigna a personas del género femenino en el contexto del país."
-          }
-        },
-        {
-          "name": "status",
-          "type": "bit(1)",
-          "nullable": "NO",
-          "default": "b'1'",
-          "extra": "—",
-          "key": "No",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT b'1')",
-            "llave": "No",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "status = {0 | 1}",
-            "dominio": "status ∈ {0,1}; 1 activo, 0 inactivo (borrado lógico); bit(1)",
-            "descripcion_detallada": "Indica el estado lógico del registro (inferido); usa DEFAULT b'1'."
-          }
-        }
-      ],
-      "description_detailed": "Catálogo de apoyo para la generación masiva de usuarios; define el país y los parámetros locales usados para construir teléfono y título de cortesía. Pertenece al módulo de direcciones (inferido por el nombre). Se relaciona con `tbc_gen_family_names`, `tbc_gen_given_names`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: ninguna; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: ninguno; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
-      "formal_notation": "tbc_gen_country_profile = @country_code + country_name + phone_prefix + phone_digits + title_male + title_female + status"
-    },
-    {
-      "kind": "table",
-      "name": "tbc_gen_family_names",
-      "sql": "CREATE TABLE `tbc_gen_family_names` (\n  `ID` int NOT NULL AUTO_INCREMENT,\n  `country_code` char(2) NOT NULL,\n  `name` varchar(60) NOT NULL,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_gen_family` (`country_code`,`name`),\n  CONSTRAINT `fk_gen_family_country` FOREIGN KEY (`country_code`) REFERENCES `tbc_gen_country_profile` (`country_code`)\n) ENGINE=InnoDB AUTO_INCREMENT=229 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
-      "columns": [
-        {
-          "name": "ID",
-          "type": "int",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "AUTO_INCREMENT",
-          "key": "PK",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor aportado por sistema (AUTO_INCREMENT)",
-            "llave": "PK",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "ID = {dígito}",
-            "dominio": "ID ∈ ℤ⁺; tipo int; AUTO_INCREMENT",
-            "descripcion_detallada": "Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar."
-          }
-        },
-        {
-          "name": "country_code",
-          "type": "char(2)",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "FK → tbc_gen_country_profile.country_code; UK",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "FK → tbc_gen_country_profile.country_code; UK",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "country_code = {carácter}",
-            "dominio": "country_code ∈ {tbc_gen_country_profile.country_code}; ON DELETE sin acción",
-            "descripcion_detallada": "Identifica o enlaza el registro con `tbc_gen_country_profile.country_code`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
-          }
-        },
-        {
-          "name": "name",
-          "type": "varchar(60)",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "UK",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "UK",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "name = {carácter}",
-            "dominio": "name ∈ cadena(≤60); tipo varchar(60)",
-            "descripcion_detallada": "Apellido disponible para selección aleatoria durante la generación masiva de usuarios."
-          }
-        }
-      ],
-      "description_detailed": "Catálogo de apoyo para la generación masiva de usuarios; almacena apellidos por país y mantiene FK al perfil del país. Pertenece al módulo de direcciones (inferido por el nombre). Se relaciona con `tbc_gen_country_profile`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `uk_gen_family` (`country_code`,`name`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: ninguna; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: ninguno; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
-      "formal_notation": "tbc_gen_family_names = @ID + #country_code + name"
-    },
-    {
-      "kind": "table",
-      "name": "tbc_gen_given_names",
-      "sql": "CREATE TABLE `tbc_gen_given_names` (\n  `ID` int NOT NULL AUTO_INCREMENT,\n  `country_code` char(2) NOT NULL,\n  `gender_ID` tinyint unsigned NOT NULL,\n  `name` varchar(60) NOT NULL,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_gen_given` (`country_code`,`gender_ID`,`name`),\n  CONSTRAINT `fk_gen_given_country` FOREIGN KEY (`country_code`) REFERENCES `tbc_gen_country_profile` (`country_code`),\n  CONSTRAINT `chk_gen_given_gender` CHECK ((`gender_ID` in (1,2)))\n) ENGINE=InnoDB AUTO_INCREMENT=457 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
-      "columns": [
-        {
-          "name": "ID",
-          "type": "int",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "AUTO_INCREMENT",
-          "key": "PK",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor aportado por sistema (AUTO_INCREMENT)",
-            "llave": "PK",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "ID = {dígito}",
-            "dominio": "ID ∈ ℤ⁺; tipo int; AUTO_INCREMENT",
-            "descripcion_detallada": "Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar."
-          }
-        },
-        {
-          "name": "country_code",
-          "type": "char(2)",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "FK → tbc_gen_country_profile.country_code; UK",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "FK → tbc_gen_country_profile.country_code; UK",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "country_code = {carácter}",
-            "dominio": "country_code ∈ {tbc_gen_country_profile.country_code}; ON DELETE sin acción",
-            "descripcion_detallada": "Identifica o enlaza el registro con `tbc_gen_country_profile.country_code`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
-          }
-        },
-        {
-          "name": "gender_ID",
-          "type": "tinyint unsigned",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "UK",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "UK",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "gender_ID = {dígito}",
-            "dominio": "gender_ID ∈ ℤ⁺ ∪ {0}; tipo tinyint unsigned; CHECK ((`gender_ID` in (1,2)))",
-            "descripcion_detallada": "Identificador del género al que se asocia el nombre; CHECK restringe el valor a 1 o 2."
-          }
-        },
-        {
-          "name": "name",
-          "type": "varchar(60)",
-          "nullable": "NO",
-          "default": "Sin dato declarado",
-          "extra": "—",
-          "key": "UK",
-          "classification": {
-            "valor": "Monovalor",
-            "origen": "Almacenado",
-            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "UK",
-            "naturaleza": "Cualitativa nominal",
-            "composicion_formal": "name = {carácter}",
-            "dominio": "name ∈ cadena(≤60); tipo varchar(60)",
-            "descripcion_detallada": "Nombre de pila disponible para selección por país y género durante la generación masiva de usuarios."
-          }
-        }
-      ],
-      "description_detailed": "Catálogo de apoyo para la generación masiva de usuarios; almacena nombres por país y género, con FK al perfil del país y CHECK de género. Pertenece al módulo de direcciones (inferido por el nombre). Se relaciona con `tbc_gen_country_profile`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`gender_ID` in (1,2))); UNIQUE UNIQUE KEY `uk_gen_given` (`country_code`,`gender_ID`,`name`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: ninguna; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: ninguno; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
-      "formal_notation": "tbc_gen_given_names = @ID + #country_code + gender_ID + name"
-    },
-    {
-      "kind": "table",
       "name": "tbc_payment_methods",
-      "sql": "CREATE TABLE `tbc_payment_methods` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `name` varchar(100) NOT NULL,\n  `description` text,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `name` (`name`)\n) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tbc_payment_methods` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `name` varchar(100) NOT NULL,\n  `description` text,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `name` (`name`)\n) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -2963,8 +2800,8 @@
             "llave": "UK",
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "name = {carácter}",
-            "dominio": "name ∈ cadena(≤100); tipo varchar(100)",
-            "descripcion_detallada": "Guarda el nombre legible de la entidad o elemento del catálogo identificado por la fila (inferido)."
+            "dominio": "name ∈ cadena(≤100); tipo varchar(100); valores registrados en BD23: {Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo, Cupón de regalo}",
+            "descripcion_detallada": "Guarda el nombre único del método de pago (UNIQUE). sp_pay_order lo recibe en p_payment_method_name para localizar el método activo. Valores registrados en BD23: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo."
           }
         },
         {
@@ -2982,7 +2819,7 @@
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "description = {carácter}",
             "dominio": "description ∈ texto (text); formato no restringido por CHECK",
-            "descripcion_detallada": "Guarda texto descriptivo del registro; en `tb_logs` contiene además el mensaje compuesto por los triggers."
+            "descripcion_detallada": "Explica el método de pago; en BD23 indica que los métodos son simulados y que solo la tarjeta de crédito permite meses."
           }
         },
         {
@@ -3022,7 +2859,7 @@
           }
         }
       ],
-      "description_detailed": "Lista los métodos de pago disponibles para registrar pagos. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `name` (`name`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbc_payment_methods_after_insert, trg_tbc_payment_methods_after_update, trg_tbc_payment_methods_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Lista los métodos de pago disponibles para registrar pagos en tb_payments; sp_pay_order lo consulta por nombre. Valores registrados en BD23: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `name` (`name`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbc_payment_methods_after_insert, trg_tbc_payment_methods_after_update, trg_tbc_payment_methods_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbc_payment_methods = @ID + name + description + status + creation_date"
     },
     {
@@ -3043,7 +2880,7 @@
     {
       "kind": "table",
       "name": "tbc_payment_methods_types",
-      "sql": "CREATE TABLE `tbc_payment_methods_types` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `code` varchar(30) NOT NULL,\n  `description` text NOT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `code_UNIQUE` (`code`)\n) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tbc_payment_methods_types` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `code` varchar(30) NOT NULL,\n  `description` text NOT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `code_UNIQUE` (`code`)\n) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -3077,8 +2914,8 @@
             "llave": "UK",
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "code = {carácter}",
-            "dominio": "code ∈ cadena(≤30); tipo varchar(30)",
-            "descripcion_detallada": "Guarda el código estable que identifica cada tipo de método de pago en el catálogo (inferido). Es obligatorio, único y se asigna al configurar el catálogo para que otras filas puedan distinguir el tipo."
+            "dominio": "code ∈ cadena(≤30); tipo varchar(30); valores registrados en BD23: {DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER, GIFT_COUPON}",
+            "descripcion_detallada": "Guarda el código estable que identifica cada tipo de método de pago en el catálogo. Es obligatorio y único; sp_pay_order lo usa para aplicar reglas (meses solo con CREDIT_CARD; GIFT_COUPON se aparta al pagar). Códigos registrados en BD23: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON."
           }
         },
         {
@@ -3096,7 +2933,7 @@
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "description = {carácter}",
             "dominio": "description ∈ texto (text); formato no restringido por CHECK",
-            "descripcion_detallada": "Guarda texto descriptivo del registro; en `tb_logs` contiene además el mensaje compuesto por los triggers."
+            "descripcion_detallada": "Describe en lenguaje natural el tipo de método de pago identificado por code; es obligatoria."
           }
         },
         {
@@ -3154,7 +2991,7 @@
           }
         }
       ],
-      "description_detailed": "Define tipos codificados que clasifican métodos de pago de usuarios. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tbd_user_payment_methods`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `code_UNIQUE` (`code`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_tipos_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbc_payment_methods_types_after_insert, trg_tbc_payment_methods_types_after_update, trg_tbc_payment_methods_types_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Define tipos codificados que clasifican los métodos de pago guardados por los usuarios; sp_pay_order usa el código para permitir meses solo con CREDIT_CARD y apartar cupones GIFT_COUPON. Códigos registrados en BD23: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tbd_user_payment_methods`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `code_UNIQUE` (`code`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_tipos_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbc_payment_methods_types_after_insert, trg_tbc_payment_methods_types_after_update, trg_tbc_payment_methods_types_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbc_payment_methods_types = @ID + code + description + status + creation_date + last_update"
     },
     {
@@ -3175,7 +3012,7 @@
     {
       "kind": "table",
       "name": "tbd_address_components",
-      "sql": "CREATE TABLE `tbd_address_components` (\n  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `address_ID` bigint unsigned NOT NULL,\n  `value` varchar(255) NOT NULL,\n  `component_type` varchar(50) NOT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `address_sup_ID` bigint unsigned DEFAULT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_address_component` (`address_ID`,`ID`),\n  KEY `idx_address_parent` (`address_ID`,`address_sup_ID`),\n  CONSTRAINT `fk_component_address` FOREIGN KEY (`address_ID`) REFERENCES `tb_user_addresses` (`ID`) ON DELETE RESTRICT,\n  CONSTRAINT `fk_component_parent` FOREIGN KEY (`address_ID`, `address_sup_ID`) REFERENCES `tbd_address_components` (`address_ID`, `ID`) ON DELETE RESTRICT\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tbd_address_components` (\n  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `address_ID` bigint unsigned NOT NULL,\n  `value` varchar(255) NOT NULL,\n  `component_type` varchar(50) NOT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `address_sup_ID` bigint unsigned DEFAULT NULL,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_address_component` (`address_ID`,`ID`),\n  KEY `idx_address_parent` (`address_ID`,`address_sup_ID`),\n  CONSTRAINT `fk_component_address` FOREIGN KEY (`address_ID`) REFERENCES `tb_user_addresses` (`ID`) ON DELETE RESTRICT,\n  CONSTRAINT `fk_component_parent` FOREIGN KEY (`address_ID`, `address_sup_ID`) REFERENCES `tbd_address_components` (`address_ID`, `ID`) ON DELETE RESTRICT\n) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -3183,12 +3020,12 @@
           "nullable": "NO",
           "default": "Sin dato declarado",
           "extra": "AUTO_INCREMENT",
-          "key": "PK; UK",
+          "key": "PK; UK compuesta (address_ID, ID)",
           "classification": {
             "valor": "Monovalor",
             "origen": "Almacenado",
             "obligatoriedad": "Obligatorio (NOT NULL); valor aportado por sistema (AUTO_INCREMENT)",
-            "llave": "PK; UK",
+            "llave": "PK; UK compuesta (address_ID, ID)",
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "ID = {dígito}",
             "dominio": "ID ∈ ℤ⁺; tipo bigint unsigned; AUTO_INCREMENT",
@@ -3201,12 +3038,12 @@
           "nullable": "NO",
           "default": "Sin dato declarado",
           "extra": "—",
-          "key": "FK → tbd_address_components.address_ID; UK",
+          "key": "FK → tbd_address_components.address_ID; UK compuesta (address_ID, ID)",
           "classification": {
             "valor": "Monovalor",
             "origen": "Almacenado",
             "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "FK → tbd_address_components.address_ID; UK",
+            "llave": "FK → tbd_address_components.address_ID; UK compuesta (address_ID, ID)",
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "address_ID = {dígito}",
             "dominio": "address_ID ∈ {tb_user_addresses.ID}; ON DELETE restrict; address_ID ∈ {tbd_address_components.address_ID}; ON DELETE restrict",
@@ -3571,7 +3408,7 @@
     {
       "kind": "table",
       "name": "tbd_order_items",
-      "sql": "CREATE TABLE `tbd_order_items` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `buyer_order_ID` int unsigned NOT NULL,\n  `product_ID` int unsigned NOT NULL,\n  `provider_ID` int NOT NULL,\n  `product_name` varchar(255) NOT NULL,\n  `quantity` int unsigned NOT NULL,\n  `unit_price` decimal(12,2) NOT NULL,\n  `subtotal` decimal(12,2) GENERATED ALWAYS AS ((`quantity` * `unit_price`)) STORED,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_order_items_buyer_order` (`buyer_order_ID`),\n  KEY `idx_order_items_provider_product` (`provider_ID`,`product_ID`),\n  CONSTRAINT `fk_order_items_buyer_order` FOREIGN KEY (`buyer_order_ID`) REFERENCES `tb_buyer_orders` (`ID`),\n  CONSTRAINT `fk_order_items_provider_product` FOREIGN KEY (`provider_ID`, `product_ID`) REFERENCES `tbd_products_users_providers` (`user_ID`, `product_ID`),\n  CONSTRAINT `chk_order_items_quantity` CHECK ((`quantity` > 0)),\n  CONSTRAINT `chk_order_items_unit_price` CHECK ((`unit_price` >= 0))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tbd_order_items` (\n  `ID` int unsigned NOT NULL AUTO_INCREMENT,\n  `buyer_order_ID` int unsigned NOT NULL,\n  `product_ID` int unsigned NOT NULL,\n  `provider_ID` int NOT NULL,\n  `product_name` varchar(255) NOT NULL,\n  `quantity` int unsigned NOT NULL,\n  `unit_price` decimal(12,2) NOT NULL,\n  `subtotal` decimal(12,2) GENERATED ALWAYS AS ((`quantity` * `unit_price`)) STORED,\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  KEY `fk_order_items_buyer_order` (`buyer_order_ID`),\n  KEY `idx_order_items_provider_product` (`provider_ID`,`product_ID`),\n  CONSTRAINT `fk_order_items_buyer_order` FOREIGN KEY (`buyer_order_ID`) REFERENCES `tb_buyer_orders` (`ID`),\n  CONSTRAINT `fk_order_items_provider_product` FOREIGN KEY (`provider_ID`, `product_ID`) REFERENCES `tbd_products_users_providers` (`user_ID`, `product_ID`),\n  CONSTRAINT `chk_order_items_quantity` CHECK ((`quantity` > 0)),\n  CONSTRAINT `chk_order_items_unit_price` CHECK ((`unit_price` >= 0))\n) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -4153,7 +3990,7 @@
     {
       "kind": "table",
       "name": "tbd_user_payment_methods",
-      "sql": "CREATE TABLE `tbd_user_payment_methods` (\n  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `user_ID` int NOT NULL,\n  `payment_method_type_ID` int unsigned NOT NULL,\n  `provider` varchar(60) NOT NULL,\n  `provider_method_ref` varchar(255) NOT NULL,\n  `label` varchar(100) DEFAULT NULL,\n  `last_four` char(4) DEFAULT NULL,\n  `is_default` tinyint(1) NOT NULL DEFAULT '0',\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_provider_method` (`provider`,`provider_method_ref`),\n  KEY `user_ID` (`user_ID`),\n  KEY `payment_method_type_ID` (`payment_method_type_ID`),\n  CONSTRAINT `tbd_user_payment_methods_ibfk_1` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`),\n  CONSTRAINT `tbd_user_payment_methods_ibfk_2` FOREIGN KEY (`payment_method_type_ID`) REFERENCES `tbc_payment_methods_types` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "sql": "CREATE TABLE `tbd_user_payment_methods` (\n  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,\n  `user_ID` int NOT NULL,\n  `payment_method_type_ID` int unsigned NOT NULL,\n  `provider` varchar(60) NOT NULL,\n  `provider_method_ref` varchar(255) NOT NULL,\n  `label` varchar(100) DEFAULT NULL,\n  `last_four` char(4) DEFAULT NULL,\n  `is_default` tinyint(1) NOT NULL DEFAULT '0',\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `uk_provider_method` (`provider`,`provider_method_ref`),\n  KEY `user_ID` (`user_ID`),\n  KEY `payment_method_type_ID` (`payment_method_type_ID`),\n  CONSTRAINT `tbd_user_payment_methods_ibfk_1` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`),\n  CONSTRAINT `tbd_user_payment_methods_ibfk_2` FOREIGN KEY (`payment_method_type_ID`) REFERENCES `tbc_payment_methods_types` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
       "columns": [
         {
           "name": "ID",
@@ -4215,12 +4052,12 @@
           "nullable": "NO",
           "default": "Sin dato declarado",
           "extra": "—",
-          "key": "UK",
+          "key": "UK compuesta (provider, provider_method_ref)",
           "classification": {
             "valor": "Monovalor",
             "origen": "Almacenado",
             "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "UK",
+            "llave": "UK compuesta (provider, provider_method_ref)",
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "provider = {carácter}",
             "dominio": "provider ∈ cadena(≤60); tipo varchar(60)",
@@ -4233,12 +4070,12 @@
           "nullable": "NO",
           "default": "Sin dato declarado",
           "extra": "—",
-          "key": "UK",
+          "key": "UK compuesta (provider, provider_method_ref)",
           "classification": {
             "valor": "Monovalor",
             "origen": "Almacenado",
             "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
-            "llave": "UK",
+            "llave": "UK compuesta (provider, provider_method_ref)",
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "provider_method_ref = {carácter}",
             "dominio": "provider_method_ref ∈ cadena(≤255); tipo varchar(255)",
@@ -4375,7 +4212,101 @@
     {
       "kind": "table",
       "name": "tbd_users_wishlist_products",
-      "sql": "CREATE TABLE `tbd_users_wishlist_products` (\n  `user_ID` int NOT NULL,\n  `product_ID` int unsigned NOT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`user_ID`,`product_ID`),\n  KEY `fk_products3` (`product_ID`),\n  CONSTRAINT `fk_products3` FOREIGN KEY (`product_ID`) REFERENCES `tb_products` (`ID`),\n  CONSTRAINT `fk_user2` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n"
+      "sql": "CREATE TABLE `tbd_users_wishlist_products` (\n  `user_ID` int NOT NULL,\n  `product_ID` int unsigned NOT NULL,\n  `status` bit(1) NOT NULL DEFAULT b'1',\n  `creation_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `last_update` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`user_ID`,`product_ID`),\n  KEY `fk_products3` (`product_ID`),\n  CONSTRAINT `fk_products3` FOREIGN KEY (`product_ID`) REFERENCES `tb_products` (`ID`),\n  CONSTRAINT `fk_user2` FOREIGN KEY (`user_ID`) REFERENCES `tb_users` (`ID`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n",
+      "columns": [
+        {
+          "name": "user_ID",
+          "type": "int",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "PK compuesta (user_ID, product_ID); FK → tb_users.ID",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "PK compuesta (user_ID, product_ID); FK → tb_users.ID",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "user_ID = {dígito}",
+            "dominio": "user_ID ∈ {tb_users.ID}; ON DELETE sin acción",
+            "descripcion_detallada": "Identifica o enlaza el registro con `tb_users.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
+          }
+        },
+        {
+          "name": "product_ID",
+          "type": "int unsigned",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "—",
+          "key": "PK compuesta (user_ID, product_ID); FK → tb_products.ID",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "PK compuesta (user_ID, product_ID); FK → tb_products.ID",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "product_ID = {dígito}",
+            "dominio": "product_ID ∈ {tb_products.ID}; ON DELETE sin acción",
+            "descripcion_detallada": "Identifica o enlaza el registro con `tb_products.ID`; su valor se almacena al crear la relación y debe corresponder a la fila referenciada."
+          }
+        },
+        {
+          "name": "status",
+          "type": "bit(1)",
+          "nullable": "NO",
+          "default": "b'1'",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT b'1')",
+            "llave": "No",
+            "naturaleza": "Cualitativa nominal",
+            "composicion_formal": "status = {0 | 1}",
+            "dominio": "status ∈ {0,1}; 1 activo, 0 inactivo (borrado lógico); bit(1)",
+            "descripcion_detallada": "Indica el estado lógico del registro (inferido); usa DEFAULT b'1'."
+          }
+        },
+        {
+          "name": "creation_date",
+          "type": "datetime",
+          "nullable": "NO",
+          "default": "CURRENT_TIMESTAMP",
+          "extra": "—",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP)",
+            "llave": "No",
+            "naturaleza": "Cuantitativa (temporal)",
+            "composicion_formal": "creation_date = {fecha/hora}",
+            "dominio": "creation_date ∈ DATETIME; default CURRENT_TIMESTAMP",
+            "descripcion_detallada": "Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP."
+          }
+        },
+        {
+          "name": "last_update",
+          "type": "datetime",
+          "nullable": "NO",
+          "default": "Sin dato declarado",
+          "extra": "ON UPDATE CURRENT_TIMESTAMP",
+          "key": "No",
+          "classification": {
+            "valor": "Monovalor",
+            "origen": "Almacenado",
+            "obligatoriedad": "Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido)",
+            "llave": "No",
+            "naturaleza": "Cuantitativa (temporal)",
+            "composicion_formal": "last_update = {fecha/hora}",
+            "dominio": "last_update ∈ DATETIME; default sin default",
+            "descripcion_detallada": "Registra una fecha u hora del ciclo de vida/auditoría (inferido); se captura al guardar."
+          }
+        }
+      ],
+      "description_detailed": "Relaciona usuarios con productos guardados en su lista de deseos. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_products`, `tb_users`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_usuarios_wishlist_productos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_users_wishlist_products_after_insert, trg_tbd_users_wishlist_products_after_update, trg_tbd_users_wishlist_products_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "formal_notation": "tbd_users_wishlist_products = @#user_ID + @#product_ID + status + creation_date + last_update"
     },
     {
       "kind": "trigger",
@@ -4524,11 +4455,6 @@
     },
     {
       "kind": "function",
-      "name": "fn_gen_courtesy_title",
-      "sql": "CREATE DEFINER=`jose.amaro`@`%` FUNCTION `fn_gen_courtesy_title`(p_country CHAR(2), p_gender TINYINT UNSIGNED) RETURNS char(10) CHARSET utf8mb4\n    READS SQL DATA\nBEGIN\n    DECLARE v_title VARCHAR(10);\n    SELECT IF(p_gender = 1, title_male, title_female) INTO v_title\n    FROM tbc_gen_country_profile\n    WHERE country_code = p_country;\n    RETURN v_title;\nEND ;;\n"
-    },
-    {
-      "kind": "function",
       "name": "fn_gen_datetime_between",
       "sql": "CREATE DEFINER=`jose.amaro`@`%` FUNCTION `fn_gen_datetime_between`(p_from DATETIME, p_to DATETIME) RETURNS datetime\n    NO SQL\nBEGIN\n    RETURN DATE_ADD(p_from, INTERVAL fn_gen_random_int(0, TIMESTAMPDIFF(SECOND, p_from, p_to)) SECOND);\nEND ;;\n"
     },
@@ -4544,18 +4470,8 @@
     },
     {
       "kind": "function",
-      "name": "fn_gen_family_name",
-      "sql": "CREATE DEFINER=`jose.amaro`@`%` FUNCTION `fn_gen_family_name`(p_country CHAR(2)) RETURNS varchar(60) CHARSET utf8mb4\n    READS SQL DATA\nBEGIN\n    DECLARE v_name VARCHAR(60);\n    SELECT name INTO v_name\n    FROM tbc_gen_family_names\n    WHERE country_code = p_country\n    ORDER BY RAND() LIMIT 1;\n    RETURN v_name;\nEND ;;\n"
-    },
-    {
-      "kind": "function",
       "name": "fn_gen_gender_id",
       "sql": "CREATE DEFINER=`jose.amaro`@`%` FUNCTION `fn_gen_gender_id`() RETURNS tinyint unsigned\n    NO SQL\nBEGIN\n    RETURN fn_gen_random_int(1, 2);\nEND ;;\n"
-    },
-    {
-      "kind": "function",
-      "name": "fn_gen_given_name",
-      "sql": "CREATE DEFINER=`jose.amaro`@`%` FUNCTION `fn_gen_given_name`(p_country CHAR(2), p_gender TINYINT UNSIGNED) RETURNS varchar(60) CHARSET utf8mb4\n    READS SQL DATA\nBEGIN\n    DECLARE v_name VARCHAR(60);\n    SELECT name INTO v_name\n    FROM tbc_gen_given_names\n    WHERE country_code = p_country AND gender_ID = p_gender\n    ORDER BY RAND() LIMIT 1;\n    RETURN v_name;\nEND ;;\n"
     },
     {
       "kind": "function",
@@ -4574,16 +4490,6 @@
     },
     {
       "kind": "function",
-      "name": "fn_gen_phone",
-      "sql": "CREATE DEFINER=`jose.amaro`@`%` FUNCTION `fn_gen_phone`(p_country CHAR(2)) RETURNS varchar(25) CHARSET utf8mb4\n    READS SQL DATA\nBEGIN\n    DECLARE v_prefix VARCHAR(6);\n    DECLARE v_digits TINYINT;\n    SELECT phone_prefix, phone_digits INTO v_prefix, v_digits\n    FROM tbc_gen_country_profile\n    WHERE country_code = p_country;\n    RETURN CONCAT(v_prefix, LPAD(FLOOR(RAND() * POW(10, v_digits)), v_digits, '0'));\nEND ;;\n"
-    },
-    {
-      "kind": "function",
-      "name": "fn_gen_random_country",
-      "sql": "CREATE DEFINER=`jose.amaro`@`%` FUNCTION `fn_gen_random_country`() RETURNS char(2) CHARSET utf8mb4\n    READS SQL DATA\nBEGIN\n    DECLARE v_country CHAR(2);\n    SELECT country_code INTO v_country\n    FROM tbc_gen_country_profile\n    WHERE status = 1\n    ORDER BY RAND() LIMIT 1;\n    RETURN v_country;\nEND ;;\n"
-    },
-    {
-      "kind": "function",
       "name": "fn_gen_random_int",
       "sql": "CREATE DEFINER=`jose.amaro`@`%` FUNCTION `fn_gen_random_int`(p_min INT, p_max INT) RETURNS int\n    NO SQL\nBEGIN\n    RETURN p_min + FLOOR(RAND() * (p_max - p_min + 1));\nEND ;;\n"
     },
@@ -4594,18 +4500,8 @@
     },
     {
       "kind": "procedure",
-      "name": "sp_generate_users",
-      "sql": "CREATE DEFINER=`jose.amaro`@`%` PROCEDURE `sp_generate_users`(\n    IN p_total      INT,\n    IN p_country    CHAR(2),\n    IN p_min_age    INT,\n    IN p_max_age    INT,\n    IN p_active_pct DECIMAL(5,2)\n)\nBEGIN\n    DECLARE v_i          INT DEFAULT 1;\n    DECLARE v_seq_base   BIGINT;\n    DECLARE v_first_id   INT DEFAULT NULL;\n    DECLARE v_user_id    INT;\n    DECLARE v_country    CHAR(2);\n    DECLARE v_gender     TINYINT UNSIGNED;\n    DECLARE v_given      VARCHAR(60);\n    DECLARE v_family     VARCHAR(60);\n    DECLARE v_created    DATETIME;\n    DECLARE v_last_login DATETIME;\n    DECLARE c_history_days INT DEFAULT 730;   \n\n    DECLARE EXIT HANDLER FOR SQLEXCEPTION\n    BEGIN\n        ROLLBACK;\n        RESIGNAL;\n    END;\n"
-    },
-    {
-      "kind": "procedure",
-      "name": "sp_gen_insert_user_person",
-      "sql": "CREATE DEFINER=`jose.amaro`@`%` PROCEDURE `sp_gen_insert_user_person`(\n    IN  p_email          VARCHAR(80),\n    IN  p_nickname       VARCHAR(100),\n    IN  p_password_hash  VARCHAR(255),\n    IN  p_creation_date  DATETIME,\n    IN  p_last_login     DATETIME,\n    IN  p_status         TINYINT,\n    IN  p_courtesy_title CHAR(10),\n    IN  p_given_names    VARCHAR(150),\n    IN  p_family_names   VARCHAR(150),\n    IN  p_birth_date     DATE,\n    IN  p_gender_ID      TINYINT UNSIGNED,\n    IN  p_country_code   CHAR(2),\n    IN  p_phone          VARCHAR(25),\n    OUT p_user_id        INT\n)\nBEGIN\n    INSERT INTO tb_users (email, nickname, password, creation_date, last_login, status)\n    VALUES (p_email, p_nickname, p_password_hash, p_creation_date, p_last_login, p_status);\n\n    SET p_user_id = LAST_INSERT_ID();\n\n    INSERT INTO tb_people (user_ID, courtesy_title_ID, given_names, family_names,\n                           birth_date, gender_ID, country_code, phone)\n    VALUES (p_user_id, p_courtesy_title, p_given_names, p_family_names,\n            p_birth_date, p_gender_ID, p_country_code, p_phone);\nEND ;;\n"
-    },
-    {
-      "kind": "procedure",
-      "name": "sp_gen_validate_params",
-      "sql": "CREATE DEFINER=`jose.amaro`@`%` PROCEDURE `sp_gen_validate_params`(\n    IN p_total      INT,\n    IN p_country    CHAR(2),\n    IN p_min_age    INT,\n    IN p_max_age    INT,\n    IN p_active_pct DECIMAL(5,2)\n)\nBEGIN\n    IF p_total IS NULL OR p_total < 1 OR p_total > 100000 THEN\n        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'p_total debe estar entre 1 y 100000';\n    END IF;\n    IF p_min_age IS NULL OR p_max_age IS NULL OR p_min_age < 18 OR p_max_age > 100 OR p_min_age > p_max_age THEN\n        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Edades invalidas: se requiere 18 <= p_min_age <= p_max_age <= 100';\n    END IF;\n    IF p_active_pct IS NULL OR p_active_pct < 0 OR p_active_pct > 100 THEN\n        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'p_active_pct debe estar entre 0 y 100';\n    END IF;\n    IF p_country IS NOT NULL THEN\n        IF NOT EXISTS (SELECT 1 FROM tbc_gen_country_profile WHERE country_code = p_country AND status = 1)\n           OR NOT EXISTS (SELECT 1 FROM tbc_gen_given_names  WHERE country_code = p_country AND gender_ID = 1)\n           OR NOT EXISTS (SELECT 1 FROM tbc_gen_given_names  WHERE country_code = p_country AND gender_ID = 2)\n           OR NOT EXISTS (SELECT 1 FROM tbc_gen_family_names WHERE country_code = p_country) THEN\n            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El pais no existe, esta deshabilitado o no tiene catalogo de nombres';\n        END IF;\n    ELSEIF NOT EXISTS (SELECT 1 FROM tbc_gen_country_profile WHERE status = 1) THEN\n        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No hay paises habilitados en tbc_gen_country_profile';\n    END IF;\nEND ;;\n"
+      "name": "sp_pay_order",
+      "sql": "CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_pay_order`(\n    IN p_order_id               INT UNSIGNED,\n    IN p_user_payment_method_id BIGINT UNSIGNED,\n    IN p_payment_method_name    VARCHAR(100),\n    IN p_installments           TINYINT UNSIGNED\n)\n    MODIFIES SQL DATA\nBEGIN\n    DECLARE v_order_user  INT DEFAULT NULL;\n    DECLARE v_total       DECIMAL(10,2) DEFAULT NULL;\n    DECLARE v_status      VARCHAR(20) DEFAULT NULL;\n    DECLARE v_upm_user    INT DEFAULT NULL;\n    DECLARE v_upm_status  BIT DEFAULT b'0';\n    DECLARE v_upm_type    VARCHAR(30) DEFAULT NULL;\n    DECLARE v_method_id   INT UNSIGNED DEFAULT NULL;\n    DECLARE v_cuota       DECIMAL(10,2);\n    DECLARE v_k           INT DEFAULT 1;\n    DECLARE v_ref         VARCHAR(150);\n    DECLARE v_payment_id  INT UNSIGNED;\n\n    DECLARE EXIT HANDLER FOR SQLEXCEPTION\n    BEGIN\n        ROLLBACK;\n        RESIGNAL;\n    END;\n"
     },
     {
       "kind": "procedure",
@@ -4615,12 +4511,12 @@
     {
       "kind": "procedure",
       "name": "sp_register_user_person",
-      "sql": "CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_register_user_person`(\n    -- Parámetros para tb_users\n    IN p_email VARCHAR(80),\n    IN p_nickname VARCHAR(100),\n    IN p_password VARCHAR(255),\n    \n    -- Parámetros para tb_people\n    IN p_courtesy_title_ID CHAR(10),\n    IN p_given_names VARCHAR(150),\n    IN p_family_names VARCHAR(150),\n    IN p_birth_date DATE,\n    IN p_gender_ID TINYINT UNSIGNED,\n    IN p_country_code CHAR(2),\n    IN p_phone VARCHAR(25)\n)\nBEGIN\n    -- Variable para guardar el ID generado en tb_users\n    DECLARE v_user_id INT;\n\n    -- Manejo de errores: Si ocurre una falla, deshace los cambios (ROLLBACK)\n    DECLARE EXIT HANDLER FOR SQLEXCEPTION\n    BEGIN\n        ROLLBACK;\n        RESIGNAL;\n    END;\n"
+      "sql": "CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_register_user_person`(\n    \n    IN p_email VARCHAR(80),\n    IN p_nickname VARCHAR(100),\n    IN p_password VARCHAR(255),\n    \n    \n    IN p_courtesy_title_ID CHAR(10),\n    IN p_given_names VARCHAR(150),\n    IN p_family_names VARCHAR(150),\n    IN p_birth_date DATE,\n    IN p_gender_ID TINYINT UNSIGNED,\n    IN p_country_code CHAR(2),\n    IN p_phone VARCHAR(25)\n)\nBEGIN\n    \n    DECLARE v_user_id INT;\n\n    \n    DECLARE EXIT HANDLER FOR SQLEXCEPTION\n    BEGIN\n        ROLLBACK;\n        RESIGNAL;\n    END;\n"
     },
     {
       "kind": "procedure",
       "name": "sp_soft_delete",
-      "sql": "CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_soft_delete`(\n    IN p_table_name VARCHAR(64),\n    IN p_record_id BIGINT UNSIGNED\n)\nBEGIN\n    DECLARE v_schema VARCHAR(64);\n    DECLARE v_pk_name VARCHAR(64);\n    DECLARE v_pk_count INT DEFAULT 0;\n    DECLARE v_count INT DEFAULT 0;\n    DECLARE v_status_count INT DEFAULT 0;\n    DECLARE v_affected INT DEFAULT 0;\n\n    -- Base de datos actual\n    SET v_schema = DATABASE();\n\n    IF v_schema IS NULL THEN\n        SIGNAL SQLSTATE '45000'\n        SET MESSAGE_TEXT = 'No hay una base de datos seleccionada';\n    END IF;\n\nEND ;;\n"
+      "sql": "CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_soft_delete`(\n    IN p_table_name VARCHAR(64),\n    IN p_record_id BIGINT UNSIGNED\n)\nBEGIN\n    DECLARE v_schema VARCHAR(64);\n    DECLARE v_pk_name VARCHAR(64);\n    DECLARE v_pk_count INT DEFAULT 0;\n    DECLARE v_count INT DEFAULT 0;\n    DECLARE v_status_count INT DEFAULT 0;\n    DECLARE v_affected INT DEFAULT 0;\n\n    \n    SET v_schema = DATABASE();\n\n    IF v_schema IS NULL THEN\n        SIGNAL SQLSTATE '45000'\n        SET MESSAGE_TEXT = 'No hay una base de datos seleccionada';\n    END IF;\n\nEND ;;\n"
     },
     {
       "kind": "procedure",
@@ -4630,69 +4526,67 @@
     {
       "kind": "procedure",
       "name": "sp_soft_delete_user",
-      "sql": "CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_soft_delete_user`(\n    IN p_user_id INT UNSIGNED\n)\n    MODIFIES SQL DATA\nBEGIN\n    DECLARE v_db_user VARCHAR(32);\n    DECLARE v_exists INT DEFAULT 0;\n    DECLARE v_status BIT DEFAULT NULL;\n    DECLARE v_affected INT DEFAULT 0;\n\n    -- 1. Identificar usuario de conexión\n    SET v_db_user = SUBSTRING_INDEX(USER(), '@', 1);\n\n    -- 2. Validar identificador\n    IF p_user_id IS NULL OR p_user_id = 0 THEN\n        SIGNAL SQLSTATE '45000'\n        SET MESSAGE_TEXT = 'El identificador del usuario es inválido';\n    END IF;\n\n    -- 3. Comprobar existencia y estado actual del usuario\n    SELECT COUNT(*), MAX(status)\n    INTO v_exists, v_status\n    FROM tb_users\n    WHERE ID = p_user_id;\n\n    IF v_exists = 0 OR v_status IS NULL THEN\n        SIGNAL SQLSTATE '45000'\n        SET MESSAGE_TEXT = 'El usuario especificado no existe o tiene un estado no válido';\n    END IF;\n\n    -- 4. Comprobar si ya está inactivo (status = b'0')\n    IF v_status = b'0' THEN\n        SIGNAL SQLSTATE '45000'\n        SET MESSAGE_TEXT = 'El usuario ya se encuentra inactivo';\n    END IF;\n\n    -- 5. Eliminación lógica (Cambiar status a 0)\n    UPDATE tb_users\n    SET status = b'0'\n    WHERE ID = p_user_id\n      AND status = b'1';\n\n    SET v_affected = ROW_COUNT();\n\n    IF v_affected <> 1 THEN\n        SIGNAL SQLSTATE '45000'\n        SET MESSAGE_TEXT = 'No se pudo desactivar el usuario';\n    END IF;\n\n    -- 6. Mensaje de confirmación\n    SELECT\n        'Usuario desactivado correctamente' AS mensaje,\n        p_user_id AS user_id,\n        v_db_user AS ejecutado_por,\n        'Inactivo (0)' AS estado_actual,\n        CURRENT_TIMESTAMP AS fecha_operacion;\nEND ;;\n"
+      "sql": "CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_soft_delete_user`(\n    IN p_user_id INT UNSIGNED\n)\n    MODIFIES SQL DATA\nBEGIN\n    DECLARE v_db_user VARCHAR(32);\n    DECLARE v_exists INT DEFAULT 0;\n    DECLARE v_status BIT DEFAULT NULL;\n    DECLARE v_affected INT DEFAULT 0;\n\n    \n    SET v_db_user = SUBSTRING_INDEX(USER(), '@', 1);\n\n    \n    IF p_user_id IS NULL OR p_user_id = 0 THEN\n        SIGNAL SQLSTATE '45000'\n        SET MESSAGE_TEXT = 'El identificador del usuario es inválido';\n    END IF;\n\n    \n    SELECT COUNT(*), MAX(status)\n    INTO v_exists, v_status\n    FROM tb_users\n    WHERE ID = p_user_id;\n\n    IF v_exists = 0 OR v_status IS NULL THEN\n        SIGNAL SQLSTATE '45000'\n        SET MESSAGE_TEXT = 'El usuario especificado no existe o tiene un estado no válido';\n    END IF;\n\n    \n    IF v_status = b'0' THEN\n        SIGNAL SQLSTATE '45000'\n        SET MESSAGE_TEXT = 'El usuario ya se encuentra inactivo';\n    END IF;\n\n    \n    UPDATE tb_users\n    SET status = b'0'\n    WHERE ID = p_user_id\n      AND status = b'1';\n\n    SET v_affected = ROW_COUNT();\n\n    IF v_affected <> 1 THEN\n        SIGNAL SQLSTATE '45000'\n        SET MESSAGE_TEXT = 'No se pudo desactivar el usuario';\n    END IF;\n\n    \n    SELECT\n        'Usuario desactivado correctamente' AS mensaje,\n        p_user_id AS user_id,\n        v_db_user AS ejecutado_por,\n        'Inactivo (0)' AS estado_actual,\n        CURRENT_TIMESTAMP AS fecha_operacion;\nEND ;;\n"
     }
   ],
   "row_counts": {
-    "tb_logs": 65632,
-    "tb_people": 10225,
+    "tb_buyer_orders": 9,
+    "tb_carts": 5,
+    "tb_logs": 86189,
+    "tb_order_cancellations": 2,
+    "tb_orders": 5,
+    "tb_payment_transaction": 11,
+    "tb_payments": 10,
+    "tb_people": 10226,
     "tb_products": 15007,
-    "tb_users": 10227,
-    "tbc_categories": 160,
-    "tbc_gen_country_profile": 12,
-    "tbc_gen_family_names": 225,
-    "tbc_gen_given_names": 344,
-    "tbc_payment_methods": 1,
-    "tbc_payment_methods_types": 1,
-    "tbd_products_categories": 5000,
-    "tb_buyer_orders": "No verificable en el respaldo",
-    "tb_carts": "No verificable en el respaldo",
-    "tb_order_cancellations": "No verificable en el respaldo",
-    "tb_orders": "No verificable en el respaldo",
-    "tb_payment_transaction": "No verificable en el respaldo",
-    "tb_payments": "No verificable en el respaldo",
-    "tb_refunds": "No verificable en el respaldo",
-    "tb_returns": "No verificable en el respaldo",
-    "tb_shipments": "No verificable en el respaldo",
-    "tb_user_addresses": "No verificable en el respaldo",
-    "tbd_address_components": "No verificable en el respaldo",
-    "tbd_cancellation_items": "No verificable en el respaldo",
-    "tbd_carts_items": "No verificable en el respaldo",
-    "tbd_order_items": "No verificable en el respaldo",
-    "tbd_products_users_providers": "No verificable en el respaldo",
-    "tbd_return_items": "No verificable en el respaldo",
-    "tbd_user_payment_methods": "No verificable en el respaldo",
+    "tb_refunds": 1,
+    "tb_returns": 1,
+    "tb_shipments": 8,
+    "tb_user_addresses": 5,
+    "tb_users": 10228,
+    "tbc_categories": 100,
+    "tbc_payment_methods": 6,
+    "tbc_payment_methods_types": 5,
+    "tbd_address_components": 30,
+    "tbd_cancellation_items": 2,
+    "tbd_carts_items": 22,
+    "tbd_order_items": 22,
+    "tbd_products_categories": 15007,
+    "tbd_products_users_providers": 22,
+    "tbd_return_items": 1,
+    "tbd_user_payment_methods": 5,
     "tbd_users_wishlist_products": "No verificable en el respaldo"
   },
   "dictionary_tables": [
-    "tb_logs",
-    "tb_people",
-    "tb_products",
-    "tb_users",
-    "tbc_categories",
-    "tbc_payment_methods",
-    "tbc_payment_methods_types",
-    "tbd_products_categories",
     "tb_buyer_orders",
     "tb_carts",
+    "tb_logs",
     "tb_order_cancellations",
     "tb_orders",
     "tb_payment_transaction",
     "tb_payments",
+    "tb_people",
+    "tb_products",
     "tb_refunds",
     "tb_returns",
     "tb_shipments",
     "tb_user_addresses",
+    "tb_users",
+    "tbc_categories",
+    "tbc_payment_methods",
+    "tbc_payment_methods_types",
     "tbd_address_components",
     "tbd_cancellation_items",
     "tbd_carts_items",
     "tbd_order_items",
+    "tbd_products_categories",
     "tbd_products_users_providers",
     "tbd_return_items",
-    "tbd_user_payment_methods"
+    "tbd_user_payment_methods",
+    "tbd_users_wishlist_products"
   ],
-  "row_counted_at": "2026-11-05 10:48:03 -06:00",
-  "row_count_source": "Conteo streaming de filas reales en sentencias INSERT de BD19.sql; 2026-11-05 10:48:03 -06:00; corresponde al respaldo, no a la instancia en vivo.",
+  "row_counted_at": "2026-11-19 11:07:24 -06:00",
+  "row_count_source": "Conteo streaming de filas reales en sentencias INSERT de BD23.sql; 2026-11-19 11:07:24 -06:00; corresponde al respaldo, no a la instancia en vivo.",
   "pending_confirmations": [
     "tb_payments.transaction_reference: confirmar qué pasarelas o medios pueden dejar la referencia NULL y el momento en que se recibe.",
     "tb_products.SKU: confirmar el estándar del código y si se captura manualmente o se importa desde otro sistema.",
@@ -4726,10 +4620,10 @@
     "tbd_user_payment_methods.provider_method_ref"
   ],
   "dictionary_counts": {
-    "tables": 25,
-    "views": 24,
-    "triggers": 72,
-    "columns": 194,
-    "foreign_keys": 34
+    "tables": 26,
+    "views": 25,
+    "triggers": 75,
+    "columns": 202,
+    "foreign_keys": 38
   }
 }

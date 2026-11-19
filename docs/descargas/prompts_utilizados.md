@@ -34,3 +34,12 @@ Registro para incluir en el PDF de entrega.
 > PASO 4. Verifica el sitio de GitHub Pages y enlaces, registra este prompt y no hagas commit ni push sin mostrar el resumen.
 >
 > REGLAS: No ejecutes nada contra una base de datos ni modifiques datos, estructura o privilegios. Si una diferencia no permite saber la fuente correcta, pregunta antes de suponer. Al final resume diferencias, tablas agregadas, totales con fecha/fuente y si el diagrama requiere cambios.
+
+
+## Actualización del diccionario y diagrama con BD23 (db_test)
+
+> Actualiza el diccionario de datos y el diagrama relacional con mi respaldo más reciente de db_test (BD23.sql). Usa la skill de Archify para el diagrama.
+>
+> Cambios a reflejar: (1) se eliminan tbc_gen_country_profile, tbc_gen_family_names y tbc_gen_given_names con sus vistas, triggers, funciones fn_gen_* y procedimientos sp_gen_* / sp_generate_users dependientes (quedan 26 tablas); (2) tb_orders.cart_ID INT UNSIGNED NOT NULL UNIQUE, FK → tb_carts.ID (1:1 carrito-orden); (3) tb_buyer_orders.order_ID INT UNSIGNED NOT NULL, FK → tb_orders.ID, UNIQUE (order_ID, seller_ID) (1:N orden-subórdenes); (4) tb_carts: uk_cart_user pasa a índice idx_cart_user; (5) tb_shipments: shipment_status agrega 'Failed attempt' y 'At pickup point', nueva columna notes VARCHAR(500) NULL; (6) nuevo procedimiento sp_pay_order(p_order_id, p_user_payment_method_id, p_payment_method_name, p_installments); (7) nuevos registros en tbc_payment_methods_types y tbc_payment_methods. Revisa también el .sql por si hay algo más.
+>
+> Sitio: el título siempre es "DB Test"; el panel izquierdo muestra la lista de TODAS las tablas como enlaces a su sección, agrupadas por prefijo (tb_, tbc_, tbd_), con la búsqueda funcionando sobre esa lista. Mantén los criterios de cada columna: descripción detallada, mono/multivalor, derivado/almacenado, obligatorio/opcional, llave primaria, naturaleza cualitativa/cuantitativa, notación formal y dominio.
