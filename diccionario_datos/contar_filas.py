@@ -9,7 +9,7 @@ def local_stamp(value):
     return f"{value:%Y-%m-%d %H:%M:%S} {offset[:3]}:{offset[3:]}"
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "Practica04" / "backups" / "BD23.sql"
+SOURCE = ROOT / "Practica04" / "backups" / "BD24.sql"
 OUT = ROOT / "Practica04" / "diccionario_datos" / "estructura.json"
 counts = {}
 table = None
@@ -87,13 +87,13 @@ audited = [name for name in table_order if name in trigger_targets]
 populated_audited = [name for name in audited if isinstance(counts.get(name), int) and counts[name] > 0]
 empty_audited = [name for name in audited if name not in populated_audited]
 logs = [name for name in table_order if name == "tb_logs"]
-selected = set(audited + logs)  # BD23: todas las tablas auditadas más tb_logs
+selected = set(audited + logs)  # BD24: todas las tablas auditadas más tb_logs
 data["dictionary_tables"] = [
     name for name in table_order if name in selected and isinstance(counts.get(name), int) and counts[name] > 0
 ] + [name for name in table_order if name in selected and not (isinstance(counts.get(name), int) and counts[name] > 0)]
 counted_at = local_stamp(datetime.now().astimezone())
 data["row_counted_at"] = counted_at
-data["row_count_source"] = f"Conteo streaming de filas reales en sentencias INSERT de BD23.sql; {counted_at}; corresponde al respaldo, no a la instancia en vivo."
+data["row_count_source"] = f"Conteo streaming de filas reales en sentencias INSERT de BD24.sql; {counted_at}; corresponde al respaldo, no a la instancia en vivo."
 OUT.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 verified = [value for value in counts.values() if isinstance(value, int)]
 print(json.dumps({"tablas_con_insert": len(verified), "total_filas_verificables": sum(verified),

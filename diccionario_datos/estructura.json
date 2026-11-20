@@ -1,6 +1,6 @@
 {
   "database": "db_test",
-  "backup": "BD23",
+  "backup": "BD24",
   "catalog_values": {
     "tbc_payment_methods_types": [
       {
@@ -63,19 +63,502 @@
     ]
   },
   "mysql_version": "8.0.45",
-  "source": "Practica04/backups/BD23.sql",
+  "source": "Practica04/backups/BD24.sql",
   "source_date": "2026-11-19",
-  "source_modified": "2026-11-19 10:41:01 -06:00",
+  "source_modified": "2026-11-19 22:39:22 -06:00",
   "extraction_scope": "CREATE TABLE (incluye índices, claves y CHECK declarados en tabla), CREATE/ALTER TABLE y CREATE INDEX si existen, además de VIEW/TRIGGER/PROCEDURE/FUNCTION. INSERT INTO se descarta durante extracción de esquema.",
   "counts": {
     "tables": 26,
-    "views": 25,
+    "views": 31,
     "triggers": 75,
     "procedures": 6,
     "functions": 10,
     "columns": 202,
     "foreign_keys": 38,
     "derived_columns": 1
+  },
+  "view_meta": {
+    "vw_trazabilidad_cancelaciones_ordenes": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_order_cancellations"
+      ]
+    },
+    "vw_trazabilidad_carritos": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_carts"
+      ]
+    },
+    "vw_trazabilidad_caso1_compra_exitosa": {
+      "columns": [
+        "test_case",
+        "order_ID",
+        "log_id",
+        "table_name",
+        "operation",
+        "inserted_by",
+        "connection_user",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "vw_trazabilidad_compras",
+        "tb_payments",
+        "tbc_payment_methods"
+      ],
+      "purpose": "Caso de prueba 1 (compra exitosa, sin modificaciones): filtra `vw_trazabilidad_compras` a las órdenes con exactamente un pago y cuyo método es 'Tarjeta de débito'. Ordena por `order_ID` y `log_id`."
+    },
+    "vw_trazabilidad_caso2_pagos_reclamacion": {
+      "columns": [
+        "test_case",
+        "order_ID",
+        "log_id",
+        "table_name",
+        "operation",
+        "inserted_by",
+        "connection_user",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "vw_trazabilidad_compras",
+        "tb_payments",
+        "tbc_payment_methods",
+        "tb_returns",
+        "tb_buyer_orders"
+      ],
+      "purpose": "Caso de prueba 2 (pagos mensuales, último rechazado, reclamación y reenvío): filtra `vw_trazabilidad_compras` a las órdenes con más de un pago con 'Tarjeta de crédito' y que además tienen una devolución (`tb_returns`) en alguna de sus subórdenes. Ordena por `order_ID` y `log_id`."
+    },
+    "vw_trazabilidad_caso3_cancelacion_parcial": {
+      "columns": [
+        "test_case",
+        "order_ID",
+        "log_id",
+        "table_name",
+        "operation",
+        "inserted_by",
+        "connection_user",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "vw_trazabilidad_compras",
+        "tb_order_cancellations",
+        "tb_buyer_orders",
+        "tb_orders",
+        "tb_refunds"
+      ],
+      "purpose": "Caso de prueba 3 (cancelación parcial, ajuste y reembolso parcial): filtra `vw_trazabilidad_compras` a las órdenes con una cancelación de suborden que generó reembolso (`tb_refunds.cancellation_ID`) y cuya orden principal no quedó en estado 'Cancelled'. Ordena por `order_ID` y `log_id`."
+    },
+    "vw_trazabilidad_caso4_punto_recoleccion": {
+      "columns": [
+        "test_case",
+        "order_ID",
+        "log_id",
+        "table_name",
+        "operation",
+        "inserted_by",
+        "connection_user",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "vw_trazabilidad_compras",
+        "tb_shipments",
+        "tb_buyer_orders"
+      ],
+      "purpose": "Caso de prueba 4 (mismo proveedor, entrega en punto de recolección): filtra `vw_trazabilidad_compras` a las órdenes con un envío cuyo campo `notes` menciona 'punto de recolección'. Ordena por `order_ID` y `log_id`."
+    },
+    "vw_trazabilidad_caso5_falta_inventario": {
+      "columns": [
+        "test_case",
+        "order_ID",
+        "log_id",
+        "table_name",
+        "operation",
+        "inserted_by",
+        "connection_user",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "vw_trazabilidad_compras",
+        "tb_order_cancellations",
+        "tb_buyer_orders",
+        "tb_orders"
+      ],
+      "purpose": "Caso de prueba 5 (compra fallida por falta de inventario): filtra `vw_trazabilidad_compras` a las órdenes en estado 'Cancelled' con una cancelación cuyo motivo menciona 'inventario'. Ordena por `order_ID` y `log_id`."
+    },
+    "vw_trazabilidad_categorias": {
+      "columns": [
+        "categoria_id",
+        "categoria_nombre",
+        "categoria_descripcion",
+        "categoria_padre",
+        "estado",
+        "total_productos_asociados",
+        "fecha_creacion",
+        "ultima_actualizacion"
+      ],
+      "bases": [
+        "tbc_categories",
+        "tbd_products_categories"
+      ]
+    },
+    "vw_trazabilidad_componentes_direccion": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbd_address_components"
+      ]
+    },
+    "vw_trazabilidad_compras": {
+      "columns": [
+        "order_ID",
+        "log_id",
+        "table_name",
+        "operation",
+        "inserted_by",
+        "connection_user",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_orders",
+        "tb_people",
+        "tb_user_addresses",
+        "tbd_address_components",
+        "tb_buyer_orders",
+        "tbd_order_items",
+        "tb_payments",
+        "tb_payment_transaction",
+        "tb_refunds",
+        "tb_shipments",
+        "tb_returns",
+        "tb_order_cancellations",
+        "tb_logs",
+        "tb_carts",
+        "tbd_carts_items",
+        "tb_users",
+        "tbd_products_users_providers",
+        "tbd_user_payment_methods",
+        "tbd_return_items",
+        "tbd_cancellation_items",
+        "tb_products"
+      ],
+      "purpose": "Vista consolidada de trazabilidad por orden. Con CTE (`entidades`, `bitacora`, `movimientos`, `ventana`, `inventario`) relaciona cada orden (`tb_orders.ID`) con todas las entidades de su flujo de compra —carrito y sus artículos, usuario, persona, direcciones y sus componentes, subórdenes, artículos de orden, producto-proveedor, método de pago del usuario, pagos, transacciones, reembolsos, envíos, devoluciones y cancelaciones— y une esas claves con los registros de `tb_logs` extrayendo el ID de `description`. Agrega los movimientos de stock de `tb_products` (Update con 'stock') ocurridos dentro de la ventana de logs de la orden. Es la base de las cinco vistas por caso."
+    },
+    "vw_trazabilidad_detalle_cancelaciones": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbd_cancellation_items"
+      ]
+    },
+    "vw_trazabilidad_detalle_devoluciones": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbd_return_items"
+      ]
+    },
+    "vw_trazabilidad_devoluciones": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_returns"
+      ]
+    },
+    "vw_trazabilidad_direcciones_usuario": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_user_addresses"
+      ]
+    },
+    "vw_trazabilidad_envios": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_shipments"
+      ]
+    },
+    "vw_trazabilidad_items_carrito": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbd_carts_items"
+      ]
+    },
+    "vw_trazabilidad_items_orden_comprador": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbd_order_items"
+      ]
+    },
+    "vw_trazabilidad_metodos_pago": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbc_payment_methods"
+      ]
+    },
+    "vw_trazabilidad_ordenes": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_orders"
+      ]
+    },
+    "vw_trazabilidad_ordenes_comprador": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_buyer_orders"
+      ]
+    },
+    "vw_trazabilidad_pagos": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_payments"
+      ]
+    },
+    "vw_trazabilidad_personas": {
+      "columns": [
+        "log_id",
+        "person_ID",
+        "user_ID",
+        "user_nickname",
+        "user_email",
+        "full_name",
+        "phone",
+        "country_code",
+        "inserted_by",
+        "roles",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_people",
+        "tb_users"
+      ]
+    },
+    "vw_trazabilidad_productos": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_products"
+      ]
+    },
+    "vw_trazabilidad_productos_categorias": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbd_products_categories"
+      ]
+    },
+    "vw_trazabilidad_proveedores_productos": {
+      "columns": [
+        "log_id",
+        "user_ID",
+        "provider_nickname",
+        "provider_email",
+        "product_ID",
+        "product_name",
+        "type_ownership",
+        "inserted_by",
+        "roles",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbd_products_users_providers",
+        "tb_users",
+        "tb_products"
+      ]
+    },
+    "vw_trazabilidad_reembolsos": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_refunds"
+      ]
+    },
+    "vw_trazabilidad_tipos_metodos_pago": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbc_payment_methods_types"
+      ]
+    },
+    "vw_trazabilidad_transacciones_pago": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_payment_transaction"
+      ]
+    },
+    "vw_trazabilidad_usuario_metodos_pago": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbd_user_payment_methods"
+      ]
+    },
+    "vw_trazabilidad_usuarios_creados": {
+      "columns": [
+        "nickname",
+        "email",
+        "inserted_by",
+        "roles",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tb_users"
+      ]
+    },
+    "vw_trazabilidad_usuarios_wishlist_productos": {
+      "columns": [
+        "log_id",
+        "operation",
+        "inserted_by",
+        "operation_description",
+        "operation_date"
+      ],
+      "bases": [
+        "tb_logs",
+        "tbd_users_wishlist_products"
+      ]
+    }
   },
   "objects": [
     {
@@ -246,7 +729,7 @@
           }
         }
       ],
-      "description_detailed": "Representa la suborden de un vendedor dentro de una orden principal: cada orden de tb_orders se divide en una suborden por vendedor (UNIQUE order_ID + seller_ID), con su subtotal, costo de envío y etapa de cumplimiento. El comprador se obtiene a través de order_ID → tb_orders.user_id. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_orders`, `tb_users`, `tb_order_cancellations`, `tb_returns`, `tb_shipments`, `tbd_order_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`shipping_cost` >= 0)); ((`subtotal` >= 0)); UNIQUE UNIQUE KEY `uk_buyer_orders_order_seller` (`order_ID`,`seller_ID`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_ordenes_comprador; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_buyer_orders_after_insert, trg_tb_buyer_orders_after_update, trg_tb_buyer_orders_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Representa la suborden de un vendedor dentro de una orden principal: cada orden de tb_orders se divide en una suborden por vendedor (UNIQUE order_ID + seller_ID), con su subtotal, costo de envío y etapa de cumplimiento. El comprador se obtiene a través de order_ID → tb_orders.user_id. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_orders`, `tb_users`, `tb_order_cancellations`, `tb_returns`, `tb_shipments`, `tbd_order_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`shipping_cost` >= 0)); ((`subtotal` >= 0)); UNIQUE UNIQUE KEY `uk_buyer_orders_order_seller` (`order_ID`,`seller_ID`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_caso2_pagos_reclamacion, vw_trazabilidad_caso3_cancelacion_parcial, vw_trazabilidad_caso4_punto_recoleccion, vw_trazabilidad_caso5_falta_inventario, vw_trazabilidad_compras, vw_trazabilidad_ordenes_comprador; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_buyer_orders_after_insert, trg_tb_buyer_orders_after_update, trg_tb_buyer_orders_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_buyer_orders = @ID + #order_ID + #seller_ID + subtotal + shipping_cost + fulfillment_status + status + creation_date + last_update"
     },
     {
@@ -360,7 +843,7 @@
           }
         }
       ],
-      "description_detailed": "Representa un carrito de un usuario para agrupar artículos antes de convertirlos en orden; desde BD23 un usuario puede tener varios carritos (índice idx_cart_user no único) y cada carrito se convierte, como máximo, en una orden (tb_orders.cart_ID UNIQUE). Pertenece al módulo de carritos (inferido por el nombre). Se relaciona con `tb_users`, `tb_orders`, `tbd_carts_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_carritos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_carts_after_insert, trg_tb_carts_after_update, trg_tb_carts_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Representa un carrito de un usuario para agrupar artículos antes de convertirlos en orden; desde BD23 un usuario puede tener varios carritos (índice idx_cart_user no único) y cada carrito se convierte, como máximo, en una orden (tb_orders.cart_ID UNIQUE). Pertenece al módulo de carritos (inferido por el nombre). Se relaciona con `tb_users`, `tb_orders`, `tbd_carts_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_carritos, vw_trazabilidad_compras; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_carts_after_insert, trg_tb_carts_after_update, trg_tb_carts_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_carts = @ID + #user_ID + status + creation_date + last_update"
     },
     {
@@ -663,7 +1146,7 @@
           }
         }
       ],
-      "description_detailed": "Registra solicitudes para cancelar órdenes de comprador, con usuario solicitante, motivo y estado del trámite. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tb_users`, `tb_refunds`, `tbd_cancellation_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_cancelaciones_ordenes; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_order_cancellations_after_insert, trg_tb_order_cancellations_after_update, trg_tb_order_cancellations_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Registra solicitudes para cancelar órdenes de comprador, con usuario solicitante, motivo y estado del trámite. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tb_users`, `tb_refunds`, `tbd_cancellation_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_cancelaciones_ordenes, vw_trazabilidad_caso3_cancelacion_parcial, vw_trazabilidad_caso5_falta_inventario, vw_trazabilidad_compras; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_order_cancellations_after_insert, trg_tb_order_cancellations_after_update, trg_tb_order_cancellations_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_order_cancellations = @ID + #buyer_order_ID + #user_ID + reason + cancellation_status + request_date + creation_date + last_update"
     },
     {
@@ -831,7 +1314,7 @@
           }
         }
       ],
-      "description_detailed": "Representa la orden principal de un comprador, generada a partir de exactamente un carrito (cart_ID NOT NULL UNIQUE, relación 1:1 carrito-orden), con importe total, estado y dirección de envío en texto; se divide en subórdenes por vendedor en tb_buyer_orders y se liquida con tb_payments. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_carts`, `tb_users`, `tb_buyer_orders`, `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `uk_orders_cart` (`cart_ID`); acciones referenciales fk_orders_user ON DELETE CASCADE; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_ordenes; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_orders_after_insert, trg_tb_orders_after_update, trg_tb_orders_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Representa la orden principal de un comprador, generada a partir de exactamente un carrito (cart_ID NOT NULL UNIQUE, relación 1:1 carrito-orden), con importe total, estado y dirección de envío en texto; se divide en subórdenes por vendedor en tb_buyer_orders y se liquida con tb_payments. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_carts`, `tb_users`, `tb_buyer_orders`, `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `uk_orders_cart` (`cart_ID`); acciones referenciales fk_orders_user ON DELETE CASCADE; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_caso3_cancelacion_parcial, vw_trazabilidad_caso5_falta_inventario, vw_trazabilidad_compras, vw_trazabilidad_ordenes; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_orders_after_insert, trg_tb_orders_after_update, trg_tb_orders_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_orders = @ID + #user_id + #cart_ID + total_amount + status + shipping_address + creation_date + last_update"
     },
     {
@@ -1035,7 +1518,7 @@
           }
         }
       ],
-      "description_detailed": "Conserva los movimientos enviados o recibidos por la pasarela de pago, su importe, resultado y referencia externa. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_transacciones_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_payment_transaction_after_insert, trg_tb_payment_transaction_after_update, trg_tb_payment_transaction_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Conserva los movimientos enviados o recibidos por la pasarela de pago, su importe, resultado y referencia externa. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_transacciones_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_payment_transaction_after_insert, trg_tb_payment_transaction_after_update, trg_tb_payment_transaction_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_payment_transaction = @ID + #payment_ID + transaction_type + amount + transaction_status + gateway_reference + response_message + transaction_date + creation_date + last_update"
     },
     {
@@ -1203,7 +1686,7 @@
           }
         }
       ],
-      "description_detailed": "Registra los pagos asociados a órdenes del modelo principal y al método de pago utilizado. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tbc_payment_methods`, `tb_orders`, `tbd_user_payment_methods`, `tb_payment_transaction`, `tb_refunds`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales fk_payments_order ON DELETE CASCADE; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_pagos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_payments_after_insert, trg_tb_payments_after_update, trg_tb_payments_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Registra los pagos asociados a órdenes del modelo principal y al método de pago utilizado. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tbc_payment_methods`, `tb_orders`, `tbd_user_payment_methods`, `tb_payment_transaction`, `tb_refunds`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales fk_payments_order ON DELETE CASCADE; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_caso1_compra_exitosa, vw_trazabilidad_caso2_pagos_reclamacion, vw_trazabilidad_compras, vw_trazabilidad_pagos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_payments_after_insert, trg_tb_payments_after_update, trg_tb_payments_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_payments = @ID + #order_id + #payment_method_id + #user_payment_method_ID + amount + payment_status + transaction_reference + payment_date"
     },
     {
@@ -1407,7 +1890,7 @@
           }
         }
       ],
-      "description_detailed": "Almacena datos personales de contacto e identificación asociados a una cuenta de usuario. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_users`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`gender_ID` in (1,2,3))); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_personas; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_people_after_insert, trg_tb_people_after_update, trg_tb_people_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Almacena datos personales de contacto e identificación asociados a una cuenta de usuario. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_users`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`gender_ID` in (1,2,3))); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_personas; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_people_after_insert, trg_tb_people_after_update, trg_tb_people_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_people = @person_ID + #user_ID + courtesy_title_ID + given_names + family_names + birth_date + gender_ID + country_code + phone + last_update"
     },
     {
@@ -1593,7 +2076,7 @@
           }
         }
       ],
-      "description_detailed": "Mantiene el catálogo de productos con SKU, descripción, precio vigente, existencias y estado de publicación. Pertenece al módulo de productos (inferido por el nombre). Se relaciona con `tbd_products_categories`, `tbd_products_users_providers`, `tbd_users_wishlist_products`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `SKU` (`SKU`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_productos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_products_after_insert, trg_products_after_update, trg_products_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Mantiene el catálogo de productos con SKU, descripción, precio vigente, existencias y estado de publicación. Pertenece al módulo de productos (inferido por el nombre). Se relaciona con `tbd_products_categories`, `tbd_products_users_providers`, `tbd_users_wishlist_products`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `SKU` (`SKU`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_productos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_products_after_insert, trg_products_after_update, trg_products_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_products = @ID + SKU + name + description + current_price + current_stock + status + creation_date + last_update"
     },
     {
@@ -1797,7 +2280,7 @@
           }
         }
       ],
-      "description_detailed": "Registra importes devueltos y su vínculo opcional con una devolución o una cancelación. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_order_cancellations`, `tb_payments`, `tb_returns`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_reembolsos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_refunds_after_insert, trg_tb_refunds_after_update, trg_tb_refunds_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Registra importes devueltos y su vínculo opcional con una devolución o una cancelación. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_order_cancellations`, `tb_payments`, `tb_returns`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_caso3_cancelacion_parcial, vw_trazabilidad_compras, vw_trazabilidad_reembolsos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_refunds_after_insert, trg_tb_refunds_after_update, trg_tb_refunds_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_refunds = @ID + #payment_ID + #return_ID + #cancellation_ID + amount + refund_status + reason + refund_date + creation_date + last_update"
     },
     {
@@ -1965,7 +2448,7 @@
           }
         }
       ],
-      "description_detailed": "Representa solicitudes de devolución asociadas a una orden de comprador y su estado de atención. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tb_users`, `tb_refunds`, `tbd_return_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_devoluciones; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_returns_after_insert, trg_tb_returns_after_update, trg_tb_returns_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Representa solicitudes de devolución asociadas a una orden de comprador y su estado de atención. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tb_users`, `tb_refunds`, `tbd_return_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_caso2_pagos_reclamacion, vw_trazabilidad_compras, vw_trazabilidad_devoluciones; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_returns_after_insert, trg_tb_returns_after_update, trg_tb_returns_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_returns = @ID + #buyer_order_ID + #user_ID + reason + return_status + request_date + creation_date + last_update"
     },
     {
@@ -2205,7 +2688,7 @@
           }
         }
       ],
-      "description_detailed": "Registra el envío de una suborden de vendedor, la dirección de destino, la transportista, el rastreo, las fechas logísticas y notas de seguimiento; su estado admite intentos fallidos y entrega en punto de recogida. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_user_addresses`, `tb_buyer_orders`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_envios; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_shipments_after_insert, trg_tb_shipments_after_update, trg_tb_shipments_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Registra el envío de una suborden de vendedor, la dirección de destino, la transportista, el rastreo, las fechas logísticas y notas de seguimiento; su estado admite intentos fallidos y entrega en punto de recogida. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_user_addresses`, `tb_buyer_orders`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_caso4_punto_recoleccion, vw_trazabilidad_compras, vw_trazabilidad_envios; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_shipments_after_insert, trg_tb_shipments_after_update, trg_tb_shipments_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_shipments = @ID + #buyer_order_ID + #address_ID + carrier + tracking_number + shipment_status + shipped_date + estimated_delivery_date + delivered_date + notes + creation_date + last_update"
     },
     {
@@ -2445,7 +2928,7 @@
           }
         }
       ],
-      "description_detailed": "Conserva direcciones de entrega de usuarios, sus datos de contacto, coordenadas e instrucciones. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_users`, `tb_shipments`, `tbd_address_components`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((((`latitude` is null) and (`longitude` is null)) or ((`latitude` is not null) and (`longitude` is not null)))); ((`latitude` between -(90) and 90)); ((`longitude` between -(180) and 180)); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_direcciones_usuario; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_user_addresses_after_insert, trg_tb_user_addresses_after_update, trg_tb_user_addresses_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Conserva direcciones de entrega de usuarios, sus datos de contacto, coordenadas e instrucciones. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_users`, `tb_shipments`, `tbd_address_components`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((((`latitude` is null) and (`longitude` is null)) or ((`latitude` is not null) and (`longitude` is not null)))); ((`latitude` between -(90) and 90)); ((`longitude` between -(180) and 180)); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_direcciones_usuario; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tb_user_addresses_after_insert, trg_tb_user_addresses_after_update, trg_tb_user_addresses_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_user_addresses = @ID + #user_ID + address_label + recipient_name + recipient_phone + delivery_instructions + latitude + longitude + is_default + status + creation_date + last_update"
     },
     {
@@ -2595,7 +3078,7 @@
           }
         }
       ],
-      "description_detailed": "Representa cuentas de acceso con correo, alias, hash de contraseña, fechas de actividad y estado. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tb_carts`, `tb_order_cancellations`, `tb_orders`, `tb_people`, `tb_returns`, `tb_user_addresses`, `tbd_products_users_providers`, `tbd_user_payment_methods`, `tbd_users_wishlist_products`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `email` (`email`); UNIQUE KEY `nickname` (`nickname`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_usuarios_creados; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_users_after_insert, trg_users_after_update, trg_users_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Representa cuentas de acceso con correo, alias, hash de contraseña, fechas de actividad y estado. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tb_carts`, `tb_order_cancellations`, `tb_orders`, `tb_people`, `tb_returns`, `tb_user_addresses`, `tbd_products_users_providers`, `tbd_user_payment_methods`, `tbd_users_wishlist_products`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `email` (`email`); UNIQUE KEY `nickname` (`nickname`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_usuarios_creados; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_users_after_insert, trg_users_after_update, trg_users_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tb_users = @ID + email + nickname + password + creation_date + last_login + status"
     },
     {
@@ -2800,8 +3283,8 @@
             "llave": "UK",
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "name = {carácter}",
-            "dominio": "name ∈ cadena(≤100); tipo varchar(100); valores registrados en BD23: {Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo, Cupón de regalo}",
-            "descripcion_detallada": "Guarda el nombre único del método de pago (UNIQUE). sp_pay_order lo recibe en p_payment_method_name para localizar el método activo. Valores registrados en BD23: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo."
+            "dominio": "name ∈ cadena(≤100); tipo varchar(100); valores registrados en BD24: {Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo, Cupón de regalo}",
+            "descripcion_detallada": "Guarda el nombre único del método de pago (UNIQUE). sp_pay_order lo recibe en p_payment_method_name para localizar el método activo. Valores registrados en BD24: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo."
           }
         },
         {
@@ -2819,7 +3302,7 @@
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "description = {carácter}",
             "dominio": "description ∈ texto (text); formato no restringido por CHECK",
-            "descripcion_detallada": "Explica el método de pago; en BD23 indica que los métodos son simulados y que solo la tarjeta de crédito permite meses."
+            "descripcion_detallada": "Explica el método de pago; en BD24 indica que los métodos son simulados y que solo la tarjeta de crédito permite meses."
           }
         },
         {
@@ -2859,7 +3342,7 @@
           }
         }
       ],
-      "description_detailed": "Lista los métodos de pago disponibles para registrar pagos en tb_payments; sp_pay_order lo consulta por nombre. Valores registrados en BD23: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `name` (`name`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbc_payment_methods_after_insert, trg_tbc_payment_methods_after_update, trg_tbc_payment_methods_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Lista los métodos de pago disponibles para registrar pagos en tb_payments; sp_pay_order lo consulta por nombre. Valores registrados en BD24: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `name` (`name`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_caso1_compra_exitosa, vw_trazabilidad_caso2_pagos_reclamacion, vw_trazabilidad_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbc_payment_methods_after_insert, trg_tbc_payment_methods_after_update, trg_tbc_payment_methods_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbc_payment_methods = @ID + name + description + status + creation_date"
     },
     {
@@ -2914,8 +3397,8 @@
             "llave": "UK",
             "naturaleza": "Cualitativa nominal",
             "composicion_formal": "code = {carácter}",
-            "dominio": "code ∈ cadena(≤30); tipo varchar(30); valores registrados en BD23: {DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER, GIFT_COUPON}",
-            "descripcion_detallada": "Guarda el código estable que identifica cada tipo de método de pago en el catálogo. Es obligatorio y único; sp_pay_order lo usa para aplicar reglas (meses solo con CREDIT_CARD; GIFT_COUPON se aparta al pagar). Códigos registrados en BD23: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON."
+            "dominio": "code ∈ cadena(≤30); tipo varchar(30); valores registrados en BD24: {DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER, GIFT_COUPON}",
+            "descripcion_detallada": "Guarda el código estable que identifica cada tipo de método de pago en el catálogo. Es obligatorio y único; sp_pay_order lo usa para aplicar reglas (meses solo con CREDIT_CARD; GIFT_COUPON se aparta al pagar). Códigos registrados en BD24: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON."
           }
         },
         {
@@ -2991,7 +3474,7 @@
           }
         }
       ],
-      "description_detailed": "Define tipos codificados que clasifican los métodos de pago guardados por los usuarios; sp_pay_order usa el código para permitir meses solo con CREDIT_CARD y apartar cupones GIFT_COUPON. Códigos registrados en BD23: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tbd_user_payment_methods`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `code_UNIQUE` (`code`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_tipos_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbc_payment_methods_types_after_insert, trg_tbc_payment_methods_types_after_update, trg_tbc_payment_methods_types_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Define tipos codificados que clasifican los métodos de pago guardados por los usuarios; sp_pay_order usa el código para permitir meses solo con CREDIT_CARD y apartar cupones GIFT_COUPON. Códigos registrados en BD24: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON. Pertenece al módulo de pagos (inferido por el nombre). Se relaciona con `tbd_user_payment_methods`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `code_UNIQUE` (`code`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_tipos_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbc_payment_methods_types_after_insert, trg_tbc_payment_methods_types_after_update, trg_tbc_payment_methods_types_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbc_payment_methods_types = @ID + code + description + status + creation_date + last_update"
     },
     {
@@ -3159,7 +3642,7 @@
           }
         }
       ],
-      "description_detailed": "Desglosa una dirección en componentes tipados y permite una relación jerárquica entre componentes. Pertenece al módulo de direcciones (inferido por el nombre). Se relaciona con `tb_user_addresses`, `tbd_address_components`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `uk_address_component` (`address_ID`,`ID`); acciones referenciales fk_component_address ON DELETE RESTRICT; fk_component_parent ON DELETE RESTRICT; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_componentes_direccion; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_address_components_after_insert, trg_tbd_address_components_after_update, trg_tbd_address_components_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Desglosa una dirección en componentes tipados y permite una relación jerárquica entre componentes. Pertenece al módulo de direcciones (inferido por el nombre). Se relaciona con `tb_user_addresses`, `tbd_address_components`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `uk_address_component` (`address_ID`,`ID`); acciones referenciales fk_component_address ON DELETE RESTRICT; fk_component_parent ON DELETE RESTRICT; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_componentes_direccion, vw_trazabilidad_compras; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_address_components_after_insert, trg_tbd_address_components_after_update, trg_tbd_address_components_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbd_address_components = @ID + #address_ID + value + component_type + status + #address_sup_ID + creation_date + last_update"
     },
     {
@@ -3273,7 +3756,7 @@
           }
         }
       ],
-      "description_detailed": "Detalla qué líneas y cantidades de una orden se incluyen en una solicitud de cancelación. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_order_cancellations`, `tbd_order_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_detalle_cancelaciones; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_cancellation_items_after_insert, trg_tbd_cancellation_items_after_update, trg_tbd_cancellation_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Detalla qué líneas y cantidades de una orden se incluyen en una solicitud de cancelación. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tb_order_cancellations`, `tbd_order_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_detalle_cancelaciones; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_cancellation_items_after_insert, trg_tbd_cancellation_items_after_update, trg_tbd_cancellation_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbd_cancellation_items = @#cancellation_ID + @#order_item_ID + quantity + creation_date + last_update"
     },
     {
@@ -3387,7 +3870,7 @@
           }
         }
       ],
-      "description_detailed": "Relaciona carritos con productos y proveedores, indicando la cantidad solicitada. Pertenece al módulo de carritos (inferido por el nombre). Se relaciona con `tb_carts`, `tbd_products_users_providers`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`quantity` > 0)); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_items_carrito; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_carts_items_after_insert, trg_tbd_carts_items_after_update, trg_tbd_carts_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Relaciona carritos con productos y proveedores, indicando la cantidad solicitada. Pertenece al módulo de carritos (inferido por el nombre). Se relaciona con `tb_carts`, `tbd_products_users_providers`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`quantity` > 0)); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_items_carrito; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_carts_items_after_insert, trg_tbd_carts_items_after_update, trg_tbd_carts_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbd_carts_items = @#cart_ID + @#provider_ID + @#product_ID + quantity + creation_date"
     },
     {
@@ -3573,7 +4056,7 @@
           }
         }
       ],
-      "description_detailed": "Conserva las líneas de las órdenes de comprador con nombre histórico, cantidad, precio unitario e importe. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tbd_products_users_providers`, `tbd_cancellation_items`, `tbd_return_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`quantity` > 0)); ((`unit_price` >= 0)); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas subtotal. Vistas asociadas: vw_trazabilidad_items_orden_comprador; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_order_items_after_insert, trg_tbd_order_items_after_update, trg_tbd_order_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Conserva las líneas de las órdenes de comprador con nombre histórico, cantidad, precio unitario e importe. Pertenece al módulo de órdenes (inferido por el nombre). Se relaciona con `tb_buyer_orders`, `tbd_products_users_providers`, `tbd_cancellation_items`, `tbd_return_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ((`quantity` > 0)); ((`unit_price` >= 0)); UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas subtotal. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_items_orden_comprador; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_order_items_after_insert, trg_tbd_order_items_after_update, trg_tbd_order_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbd_order_items = @ID + #buyer_order_ID + #product_ID + #provider_ID + product_name + quantity + unit_price + subtotal + creation_date"
     },
     {
@@ -3837,7 +4320,7 @@
           }
         }
       ],
-      "description_detailed": "Asocia productos con usuarios que actúan como propietarios o proveedores. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_products`, `tb_users`, `tbd_carts_items`, `tbd_order_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_proveedores_productos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_products_users_providers_after_insert, trg_tbd_products_users_providers_after_update, trg_tbd_products_users_providers_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Asocia productos con usuarios que actúan como propietarios o proveedores. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_products`, `tb_users`, `tbd_carts_items`, `tbd_order_items`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_proveedores_productos; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_products_users_providers_after_insert, trg_tbd_products_users_providers_after_update, trg_tbd_products_users_providers_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbd_products_users_providers = @#user_ID + @#product_ID + type_ownership + status + avalaible_date + creation_date + last_update"
     },
     {
@@ -3969,7 +4452,7 @@
           }
         }
       ],
-      "description_detailed": "Detalla las líneas y cantidades incluidas en una devolución, junto con notas sobre su condición. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tbd_order_items`, `tb_returns`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_detalle_devoluciones; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_return_items_after_insert, trg_tbd_return_items_after_update, trg_tbd_return_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Detalla las líneas y cantidades incluidas en una devolución, junto con notas sobre su condición. Pertenece al módulo de envíos, devoluciones y cancelaciones (inferido por el nombre). Se relaciona con `tbd_order_items`, `tb_returns`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE ninguno; acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_detalle_devoluciones; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_return_items_after_insert, trg_tbd_return_items_after_update, trg_tbd_return_items_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbd_return_items = @#return_ID + @#order_item_ID + quantity + condition_notes + creation_date + last_update"
     },
     {
@@ -4191,7 +4674,7 @@
           }
         }
       ],
-      "description_detailed": "Vincula usuarios con referencias de métodos de pago administradas por proveedores externos. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_users`, `tbc_payment_methods_types`, `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `uk_provider_method` (`provider`,`provider_method_ref`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_usuario_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_user_payment_methods_after_insert, trg_tbd_user_payment_methods_after_update, trg_tbd_user_payment_methods_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
+      "description_detailed": "Vincula usuarios con referencias de métodos de pago administradas por proveedores externos. Pertenece al módulo de usuarios (inferido por el nombre). Se relaciona con `tb_users`, `tbc_payment_methods_types`, `tb_payments`; las FK entrantes y salientes están enumeradas en Relaciones. Reglas de negocio declaradas: CHECK ninguno; UNIQUE UNIQUE KEY `uk_provider_method` (`provider`,`provider_method_ref`); acciones referenciales sin acción explícita; columnas generadas ninguna. Vistas asociadas: vw_trazabilidad_compras, vw_trazabilidad_usuario_metodos_pago; mapeo por tabla base o filtro de trazabilidad. Triggers asociados: trg_tbd_user_payment_methods_after_insert, trg_tbd_user_payment_methods_after_update, trg_tbd_user_payment_methods_after_delete; la función se deriva de los eventos y mensajes de auditoría visibles (inferido).",
       "formal_notation": "tbd_user_payment_methods = @ID + #user_ID + #payment_method_type_ID + provider + provider_method_ref + label + last_four + is_default + status + creation_date + last_update"
     },
     {
@@ -4335,6 +4818,31 @@
     },
     {
       "kind": "view",
+      "name": "vw_trazabilidad_caso1_compra_exitosa",
+      "sql": "CREATE VIEW `vw_trazabilidad_caso1_compra_exitosa` AS select 'Caso 1: Compra exitosa, sin modificaciones' AS `test_case`,`t`.`order_ID` AS `order_ID`,`t`.`log_id` AS `log_id`,`t`.`table_name` AS `table_name`,`t`.`operation` AS `operation`,`t`.`inserted_by` AS `inserted_by`,`t`.`connection_user` AS `connection_user`,`t`.`operation_description` AS `operation_description`,`t`.`operation_date` AS `operation_date` from `vw_trazabilidad_compras` `t` where `t`.`order_ID` in (select `p`.`order_id` from (`tb_payments` `p` join `tbc_payment_methods` `m` on((`m`.`ID` = `p`.`payment_method_id`))) group by `p`.`order_id` having ((count(0) = 1) and (max(`m`.`name`) = 'Tarjeta de débito'))) order by `t`.`order_ID`,`t`.`log_id`;"
+    },
+    {
+      "kind": "view",
+      "name": "vw_trazabilidad_caso2_pagos_reclamacion",
+      "sql": "CREATE VIEW `vw_trazabilidad_caso2_pagos_reclamacion` AS select 'Caso 2: Pagos mensuales, último rechazado, reclamación y reenvío' AS `test_case`,`t`.`order_ID` AS `order_ID`,`t`.`log_id` AS `log_id`,`t`.`table_name` AS `table_name`,`t`.`operation` AS `operation`,`t`.`inserted_by` AS `inserted_by`,`t`.`connection_user` AS `connection_user`,`t`.`operation_description` AS `operation_description`,`t`.`operation_date` AS `operation_date` from `vw_trazabilidad_compras` `t` where (`t`.`order_ID` in (select `p`.`order_id` from (`tb_payments` `p` join `tbc_payment_methods` `m` on((`m`.`ID` = `p`.`payment_method_id`))) where (`m`.`name` = 'Tarjeta de crédito') group by `p`.`order_id` having (count(0) > 1)) and `t`.`order_ID` in (select `bo`.`order_ID` from (`tb_returns` `r` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `r`.`buyer_order_ID`))))) order by `t`.`order_ID`,`t`.`log_id`;"
+    },
+    {
+      "kind": "view",
+      "name": "vw_trazabilidad_caso3_cancelacion_parcial",
+      "sql": "CREATE VIEW `vw_trazabilidad_caso3_cancelacion_parcial` AS select 'Caso 3: Cancelación parcial, ajuste y reembolso parcial' AS `test_case`,`t`.`order_ID` AS `order_ID`,`t`.`log_id` AS `log_id`,`t`.`table_name` AS `table_name`,`t`.`operation` AS `operation`,`t`.`inserted_by` AS `inserted_by`,`t`.`connection_user` AS `connection_user`,`t`.`operation_description` AS `operation_description`,`t`.`operation_date` AS `operation_date` from `vw_trazabilidad_compras` `t` where `t`.`order_ID` in (select `bo`.`order_ID` from (((`tb_order_cancellations` `c` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `c`.`buyer_order_ID`))) join `tb_orders` `o` on((`o`.`ID` = `bo`.`order_ID`))) join `tb_refunds` `r` on((`r`.`cancellation_ID` = `c`.`ID`))) where (`o`.`status` <> 'Cancelled')) order by `t`.`order_ID`,`t`.`log_id`;"
+    },
+    {
+      "kind": "view",
+      "name": "vw_trazabilidad_caso4_punto_recoleccion",
+      "sql": "CREATE VIEW `vw_trazabilidad_caso4_punto_recoleccion` AS select 'Caso 4: Mismo proveedor, entrega en punto de recolección' AS `test_case`,`t`.`order_ID` AS `order_ID`,`t`.`log_id` AS `log_id`,`t`.`table_name` AS `table_name`,`t`.`operation` AS `operation`,`t`.`inserted_by` AS `inserted_by`,`t`.`connection_user` AS `connection_user`,`t`.`operation_description` AS `operation_description`,`t`.`operation_date` AS `operation_date` from `vw_trazabilidad_compras` `t` where `t`.`order_ID` in (select `bo`.`order_ID` from (`tb_shipments` `s` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `s`.`buyer_order_ID`))) where (`s`.`notes` like '%punto de recolecci%')) order by `t`.`order_ID`,`t`.`log_id`;"
+    },
+    {
+      "kind": "view",
+      "name": "vw_trazabilidad_caso5_falta_inventario",
+      "sql": "CREATE VIEW `vw_trazabilidad_caso5_falta_inventario` AS select 'Caso 5: Compra fallida por falta de inventario' AS `test_case`,`t`.`order_ID` AS `order_ID`,`t`.`log_id` AS `log_id`,`t`.`table_name` AS `table_name`,`t`.`operation` AS `operation`,`t`.`inserted_by` AS `inserted_by`,`t`.`connection_user` AS `connection_user`,`t`.`operation_description` AS `operation_description`,`t`.`operation_date` AS `operation_date` from `vw_trazabilidad_compras` `t` where `t`.`order_ID` in (select `bo`.`order_ID` from ((`tb_order_cancellations` `c` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `c`.`buyer_order_ID`))) join `tb_orders` `o` on((`o`.`ID` = `bo`.`order_ID`))) where ((`o`.`status` = 'Cancelled') and (`c`.`reason` like '%inventario%'))) order by `t`.`order_ID`,`t`.`log_id`;"
+    },
+    {
+      "kind": "view",
       "name": "vw_trazabilidad_categorias",
       "sql": "CREATE VIEW `vw_trazabilidad_categorias` AS select `c`.`ID` AS `categoria_id`,`c`.`name` AS `categoria_nombre`,`c`.`description` AS `categoria_descripcion`,coalesce(`padre`.`name`,'Categoría Principal') AS `categoria_padre`,`c`.`status` AS `estado`,count(`pc`.`product_ID`) AS `total_productos_asociados`,`c`.`creation_date` AS `fecha_creacion`,`c`.`last_update` AS `ultima_actualizacion` from ((`tbc_categories` `c` left join `tbc_categories` `padre` on((`c`.`sup_id_category` = `padre`.`ID`))) left join `tbd_products_categories` `pc` on((`c`.`ID` = `pc`.`category_ID`))) group by `c`.`ID`,`c`.`name`,`c`.`description`,`padre`.`name`,`c`.`status`,`c`.`creation_date`,`c`.`last_update`;"
     },
@@ -4342,6 +4850,11 @@
       "kind": "view",
       "name": "vw_trazabilidad_componentes_direccion",
       "sql": "CREATE VIEW `vw_trazabilidad_componentes_direccion` AS select `l`.`ID` AS `log_id`,`l`.`operation` AS `operation`,`l`.`db_user` AS `inserted_by`,`l`.`description` AS `operation_description`,`l`.`operation_date` AS `operation_date` from `tb_logs` `l` where (`l`.`table_name` = 'tbd_address_components');"
+    },
+    {
+      "kind": "view",
+      "name": "vw_trazabilidad_compras",
+      "sql": "CREATE VIEW `vw_trazabilidad_compras` AS with `entidades` as (select `o`.`ID` AS `order_ID`,'tb_orders' AS `tabla`,cast(`o`.`ID` as char charset utf8mb4) AS `clave` from `tb_orders` `o` union all select `o`.`ID` AS `ID`,'tb_carts' AS `tb_carts`,cast(`o`.`cart_ID` as char charset utf8mb4) AS `CAST(o.cart_ID AS CHAR)` from `tb_orders` `o` union all select `o`.`ID` AS `ID`,'tbd_carts_items' AS `tbd_carts_items`,cast(`o`.`cart_ID` as char charset utf8mb4) AS `CAST(o.cart_ID AS CHAR)` from `tb_orders` `o` union all select `o`.`ID` AS `ID`,'tb_users' AS `tb_users`,cast(`o`.`user_id` as char charset utf8mb4) AS `CAST(o.user_id AS CHAR)` from `tb_orders` `o` union all select `o`.`ID` AS `ID`,'tb_people' AS `tb_people`,cast(`p`.`person_ID` as char charset utf8mb4) AS `CAST(p.person_ID AS CHAR)` from (`tb_orders` `o` join `tb_people` `p` on((`p`.`user_ID` = `o`.`user_id`))) union all select `o`.`ID` AS `ID`,'tb_user_addresses' AS `tb_user_addresses`,cast(`a`.`ID` as char charset utf8mb4) AS `CAST(a.ID AS CHAR)` from (`tb_orders` `o` join `tb_user_addresses` `a` on((`a`.`user_ID` = `o`.`user_id`))) union all select `o`.`ID` AS `ID`,'tbd_address_components' AS `tbd_address_components`,cast(`ac`.`ID` as char charset utf8mb4) AS `CAST(ac.ID AS CHAR)` from ((`tb_orders` `o` join `tb_user_addresses` `a` on((`a`.`user_ID` = `o`.`user_id`))) join `tbd_address_components` `ac` on((`ac`.`address_ID` = `a`.`ID`))) union all select `bo`.`order_ID` AS `order_ID`,'tb_buyer_orders' AS `tb_buyer_orders`,cast(`bo`.`ID` as char charset utf8mb4) AS `CAST(bo.ID AS CHAR)` from `tb_buyer_orders` `bo` union all select `bo`.`order_ID` AS `order_ID`,'tbd_order_items' AS `tbd_order_items`,cast(`oi`.`ID` as char charset utf8mb4) AS `CAST(oi.ID AS CHAR)` from (`tbd_order_items` `oi` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `oi`.`buyer_order_ID`))) union all select `bo`.`order_ID` AS `order_ID`,'tbd_products_users_providers' AS `tbd_products_users_providers`,concat('user_ID=',`oi`.`provider_ID`,'|product_ID=',`oi`.`product_ID`) AS `CONCAT('user_ID=', oi.provider_ID, '|product_ID=', oi.product_ID)` from (`tbd_order_items` `oi` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `oi`.`buyer_order_ID`))) union all select distinct `p`.`order_id` AS `order_id`,'tbd_user_payment_methods' AS `tbd_user_payment_methods`,cast(`p`.`user_payment_method_ID` as char charset utf8mb4) AS `CAST(p.user_payment_method_ID AS CHAR)` from `tb_payments` `p` union all select `p`.`order_id` AS `order_id`,'tb_payments' AS `tb_payments`,cast(`p`.`ID` as char charset utf8mb4) AS `CAST(p.ID AS CHAR)` from `tb_payments` `p` union all select `p`.`order_id` AS `order_id`,'tb_payment_transaction' AS `tb_payment_transaction`,cast(`t`.`ID` as char charset utf8mb4) AS `CAST(t.ID AS CHAR)` from (`tb_payment_transaction` `t` join `tb_payments` `p` on((`p`.`ID` = `t`.`payment_ID`))) union all select `p`.`order_id` AS `order_id`,'tb_refunds' AS `tb_refunds`,cast(`r`.`ID` as char charset utf8mb4) AS `CAST(r.ID AS CHAR)` from (`tb_refunds` `r` join `tb_payments` `p` on((`p`.`ID` = `r`.`payment_ID`))) union all select `bo`.`order_ID` AS `order_ID`,'tb_shipments' AS `tb_shipments`,cast(`s`.`ID` as char charset utf8mb4) AS `CAST(s.ID AS CHAR)` from (`tb_shipments` `s` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `s`.`buyer_order_ID`))) union all select `bo`.`order_ID` AS `order_ID`,'tb_returns' AS `tb_returns`,cast(`r`.`ID` as char charset utf8mb4) AS `CAST(r.ID AS CHAR)` from (`tb_returns` `r` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `r`.`buyer_order_ID`))) union all select `bo`.`order_ID` AS `order_ID`,'tbd_return_items' AS `tbd_return_items`,cast(`r`.`ID` as char charset utf8mb4) AS `CAST(r.ID AS CHAR)` from (`tb_returns` `r` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `r`.`buyer_order_ID`))) union all select `bo`.`order_ID` AS `order_ID`,'tb_order_cancellations' AS `tb_order_cancellations`,cast(`c`.`ID` as char charset utf8mb4) AS `CAST(c.ID AS CHAR)` from (`tb_order_cancellations` `c` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `c`.`buyer_order_ID`))) union all select `bo`.`order_ID` AS `order_ID`,'tbd_cancellation_items' AS `tbd_cancellation_items`,cast(`c`.`ID` as char charset utf8mb4) AS `CAST(c.ID AS CHAR)` from (`tb_order_cancellations` `c` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `c`.`buyer_order_ID`)))), `bitacora` as (select `l`.`ID` AS `ID`,`l`.`table_name` AS `table_name`,`l`.`operation` AS `operation`,`l`.`db_user` AS `db_user`,`l`.`description` AS `description`,`l`.`operation_date` AS `operation_date`,(case when (`l`.`table_name` = 'tbd_products_users_providers') then concat(regexp_substr(`l`.`description`,'user_ID=[0-9]+'),'|',regexp_substr(`l`.`description`,'product_ID=[0-9]+')) else regexp_substr(regexp_substr(`l`.`description`,'ID[=:] ?[0-9]+'),'[0-9]+') end) AS `clave` from `tb_logs` `l` where (`l`.`table_name` in ('tb_orders','tb_carts','tbd_carts_items','tb_users','tb_people','tb_user_addresses','tbd_address_components','tb_buyer_orders','tbd_order_items','tbd_products_users_providers','tbd_user_payment_methods','tb_payments','tb_payment_transaction','tb_refunds','tb_shipments','tb_returns','tbd_return_items','tb_order_cancellations','tbd_cancellation_items','tb_products'))), `movimientos` as (select `e`.`order_ID` AS `order_ID`,`b`.`ID` AS `ID`,`b`.`table_name` AS `table_name`,`b`.`operation` AS `operation`,`b`.`db_user` AS `db_user`,`b`.`description` AS `description`,`b`.`operation_date` AS `operation_date`,`b`.`clave` AS `clave` from (`entidades` `e` join `bitacora` `b` on(((`b`.`table_name` = `e`.`tabla`) and (`b`.`clave` = `e`.`clave`))))), `ventana` as (select `movimientos`.`order_ID` AS `order_ID`,min(`movimientos`.`ID`) AS `desde`,max(`movimientos`.`ID`) AS `hasta` from `movimientos` where (`movimientos`.`table_name` not in ('tb_users','tb_people','tbd_products_users_providers')) group by `movimientos`.`order_ID`), `inventario` as (select distinct `bo`.`order_ID` AS `order_ID`,`b`.`ID` AS `ID`,`b`.`table_name` AS `table_name`,`b`.`operation` AS `operation`,`b`.`db_user` AS `db_user`,`b`.`description` AS `description`,`b`.`operation_date` AS `operation_date`,`b`.`clave` AS `clave` from (((`tbd_order_items` `oi` join `tb_buyer_orders` `bo` on((`bo`.`ID` = `oi`.`buyer_order_ID`))) join `ventana` `v` on((`v`.`order_ID` = `bo`.`order_ID`))) join `bitacora` `b` on(((`b`.`table_name` = 'tb_products') and (`b`.`clave` = cast(`oi`.`product_ID` as char charset utf8mb4)) and (`b`.`operation` = 'Update') and (`b`.`description` like '%stock%') and (`b`.`ID` between `v`.`desde` and `v`.`hasta`))))) select `x`.`order_ID` AS `order_ID`,`x`.`ID` AS `log_id`,`x`.`table_name` AS `table_name`,`x`.`operation` AS `operation`,`x`.`db_user` AS `inserted_by`,substring_index(`x`.`db_user`,'@',1) AS `connection_user`,`x`.`description` AS `operation_description`,`x`.`operation_date` AS `operation_date` from (select `movimientos`.`order_ID` AS `order_ID`,`movimientos`.`ID` AS `ID`,`movimientos`.`table_name` AS `table_name`,`movimientos`.`operation` AS `operation`,`movimientos`.`db_user` AS `db_user`,`movimientos`.`description` AS `description`,`movimientos`.`operation_date` AS `operation_date`,`movimientos`.`clave` AS `clave` from `movimientos` union all select `inventario`.`order_ID` AS `order_ID`,`inventario`.`ID` AS `ID`,`inventario`.`table_name` AS `table_name`,`inventario`.`operation` AS `operation`,`inventario`.`db_user` AS `db_user`,`inventario`.`description` AS `description`,`inventario`.`operation_date` AS `operation_date`,`inventario`.`clave` AS `clave` from `inventario`) `x`;"
     },
     {
       "kind": "view",
@@ -4585,8 +5098,8 @@
     "tbd_user_payment_methods",
     "tbd_users_wishlist_products"
   ],
-  "row_counted_at": "2026-11-19 11:07:24 -06:00",
-  "row_count_source": "Conteo streaming de filas reales en sentencias INSERT de BD23.sql; 2026-11-19 11:07:24 -06:00; corresponde al respaldo, no a la instancia en vivo.",
+  "row_counted_at": "2026-11-19 22:42:21 -06:00",
+  "row_count_source": "Conteo streaming de filas reales en sentencias INSERT de BD24.sql; 2026-11-19 22:42:21 -06:00; corresponde al respaldo, no a la instancia en vivo.",
   "pending_confirmations": [
     "tb_payments.transaction_reference: confirmar qué pasarelas o medios pueden dejar la referencia NULL y el momento en que se recibe.",
     "tb_products.SKU: confirmar el estándar del código y si se captura manualmente o se importa desde otro sistema.",
@@ -4621,7 +5134,7 @@
   ],
   "dictionary_counts": {
     "tables": 26,
-    "views": 25,
+    "views": 31,
     "triggers": 75,
     "columns": 202,
     "foreign_keys": 38

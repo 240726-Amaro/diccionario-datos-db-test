@@ -8,7 +8,7 @@ def selected_view(obj):
  refs=set(re.findall(r'`([^`]+)`',obj['sql'])); refs.discard('tb_logs')
  return bool(refs & selected_set)
 vs=[x for x in O if x['kind']=='view' and selected_view(x)]; gs=[x for x in O if x['kind']=='trigger' and (lambda m: bool(m and m.group(1) in selected_set))(re.search(r'\bON\s+`([^`]+)`',x['sql'],re.I))]; ps=[x for x in O if x['kind']=='procedure']; fs=[x for x in O if x['kind']=='function']
-SOURCE_NOTE=f"Estructura y totales de registros obtenidos del respaldo BD23.sql (fecha del archivo: {DATA.get('source_modified')}). Conteo de registros realizado el: {DATA.get('row_counted_at')}. Los totales corresponden al respaldo, no a la instancia en vivo."
+SOURCE_NOTE=f"Estructura y totales de registros obtenidos del respaldo BD24.sql (fecha del archivo: {DATA.get('source_modified')}). Conteo de registros realizado el: {DATA.get('row_counted_at')}. Los totales corresponden al respaldo, no a la instancia en vivo."
 def tablecols(t):
  cols=[]; cons=[]
  for ln in t['sql'].splitlines():
@@ -67,7 +67,7 @@ for a,n,c,b,bc,act in fks:
 (D/'schema.dbml').write_text('\n'.join(bml)+'\n',encoding='utf-8')
 # workbook rows from schema (inline strings, no optional packages)
 sheets={}
-sheets['Tablas']=[['Tabla','Registros BD23','Prefijo/tipo','Módulo','Motor','Charset','Collation','Descripción detallada','Notación formal']]+[[t['name'],DATA.get('row_counts',{}).get(t['name'],0), 'principal tb_' if t['name'].startswith('tb_') else 'catálogo tbc_' if t['name'].startswith('tbc_') else 'detalle tbd_','Según descripción inferida','InnoDB','utf8mb4','utf8mb4_0900_ai_ci',t.get('description_detailed','Descripción derivada del esquema.'),t.get('formal_notation','')] for t in ts]
+sheets['Tablas']=[['Tabla','Registros BD24','Prefijo/tipo','Módulo','Motor','Charset','Collation','Descripción detallada','Notación formal']]+[[t['name'],DATA.get('row_counts',{}).get(t['name'],0), 'principal tb_' if t['name'].startswith('tb_') else 'catálogo tbc_' if t['name'].startswith('tbc_') else 'detalle tbd_','Según descripción inferida','InnoDB','utf8mb4','utf8mb4_0900_ai_ci',t.get('description_detailed','Descripción derivada del esquema.'),t.get('formal_notation','')] for t in ts]
 sheets['Columnas']=[['Tabla','#','Columna','Tipo','Longitud/precisión','NULL','Default','Extras','Llave técnica','Valor','Origen','Obligatoriedad','Llave','Naturaleza','Composición formal','Dominio','Descripción detallada']]
 for t in ts:
  cs,co=tablecols(t)
@@ -83,7 +83,9 @@ for table in ts:
   sheets['Indices_restricciones'].append([table['name'],kind,definition])
 sheets['Vistas']=[['Vista','Tablas base','Columnas expuestas','Origen/tipo']]
 for v in vs:
- s=v['sql']; bases=', '.join(dict.fromkeys(re.findall(r'\b(?:FROM|JOIN)\s+`([^`]+)`',s,re.I))); aliases=', '.join(re.findall(r'\bAS\s+`([^`]+)`',s,re.I)); sheets['Vistas'].append([v['name'],bases,aliases,'Derivado de expresión SQL; tipo inferido'])
+ s=v['sql']; bases=', '.join(dict.fromkeys(re.findall(r'\b(?:FROM|JOIN)\s+`([^`]+)`',s,re.I))); aliases=', '.join(re.findall(r'\bAS\s+`([^`]+)`',s,re.I)); meta=DATA.get('view_meta',{}).get(v['name'],{})
+ if meta.get('purpose'): bases=', '.join(meta.get('bases',[])); aliases=', '.join(meta.get('columns',[]))
+ sheets['Vistas'].append([v['name'],bases,aliases,(meta['purpose'].replace('`','')+' ' if meta.get('purpose') else '')+'Derivado de expresión SQL; tipo inferido'])
 sheets['Triggers']=[['Nombre','Tabla','Evento','Momento','Columnas log','Formato description']]
 for g in gs:
  s=g['sql']; tb=re.search(r'ON\s+`([^`]+)`',s); ev=re.search(r'AFTER\s+(INSERT|UPDATE|DELETE)',s); cc=re.search(r'INSERT\s+INTO\s+`?tb_logs`?\s*\(([^)]*)\)',s,re.I); concat=re.search(r'CONCAT\s*\((.*?)\)\s*\)',s,re.S|re.I); fmt=' '.join(re.findall(r"'((?:[^']|'')*)'",concat.group(1))) if concat else 'description sin plantilla CONCAT identificable'; sheets['Triggers'].append([g['name'],tb.group(1) if tb else '',ev.group(1) if ev else '', 'AFTER',cc.group(1).replace('`','') if cc else 'Sin dato declarado',fmt+' (valores dinámicos NEW/OLD)'])
@@ -122,11 +124,19 @@ sheets['Volumen_datos'] += [['Tablas sin INSERT verificable',len(ts)-verified,''
 sheets['Convenciones']=[['Elemento','Convención'],['tb_','Tabla principal'],['tbc_','Catálogo'],['tbd_','Detalle o relación'],['vw_','Vista'],['trg_','Trigger'],['sp_','Procedimiento'],['fk_','Llave foránea'],['uk_','Restricción UNIQUE'],['chk_','Restricción CHECK'],['creation_date / last_update','Fechas de ciclo de vida; ver default por columna'],['status','Dominio depende del tipo SQL; bit(1) y tinyint no se presumen equivalentes']]
 sheets['Valores_catalogo']=[['Catálogo','ID','Código/nombre','Descripción']]+[[cat,r['ID'],list(r.values())[1],r['description']] for cat,rows in DATA.get('catalog_values',{}).items() for r in rows]
 sheets['Historial_cambios']=[['Versión','Objeto','Cantidad','Detalle'],
- ['BD23','Esquema completo',DATA.get('counts',{}).get('tables',0),'Fuente: Practica04/backups/BD23.sql.'],
- ['BD23','Vistas',DATA.get('counts',{}).get('views',0),'Definiciones finales del respaldo.'],
- ['BD23','Triggers',DATA.get('counts',{}).get('triggers',0),'Definiciones del respaldo.'],
- ['BD23','Procedimientos',DATA.get('counts',{}).get('procedures',0),'Definiciones del respaldo.'],
- ['BD23','Funciones',DATA.get('counts',{}).get('functions',0),'Definiciones del respaldo.'],
+ ['BD24','Esquema completo',DATA.get('counts',{}).get('tables',0),'Fuente: Practica04/backups/BD24.sql.'],
+ ['BD24','Vistas',DATA.get('counts',{}).get('views',0),'Definiciones finales del respaldo: 25 por tabla + vw_trazabilidad_compras + 5 vistas por caso de prueba.'],
+ ['BD24','Triggers',DATA.get('counts',{}).get('triggers',0),'Sin cambios respecto a BD23.'],
+ ['BD24','Procedimientos',DATA.get('counts',{}).get('procedures',0),'Sin cambios respecto a BD23.'],
+ ['BD24','Funciones',DATA.get('counts',{}).get('functions',0),'Sin cambios respecto a BD23.'],
+ ['BD24','vw_trazabilidad_compras',1,'Nueva vista consolidada: une por orden los registros de tb_logs de todas las tablas del flujo de compra y los movimientos de stock de tb_products.'],
+ ['BD24','Vistas por caso de prueba',5,'Nuevas vw_trazabilidad_caso1_compra_exitosa, caso2_pagos_reclamacion, caso3_cancelacion_parcial, caso4_punto_recoleccion y caso5_falta_inventario (filtran vw_trazabilidad_compras y agregan test_case).'],
+ ['BD24','Datos',0,'Los INSERT (incluido tb_logs) son idénticos a BD23; los conteos no cambian.'],
+ ['BD23','Esquema completo',26,'Fuente: Practica04/backups/BD23.sql.'],
+ ['BD23','Vistas',25,'Definiciones finales del respaldo.'],
+ ['BD23','Triggers',75,'Definiciones del respaldo.'],
+ ['BD23','Procedimientos',6,'Definiciones del respaldo.'],
+ ['BD23','Funciones',10,'Definiciones del respaldo.'],
  ['BD23','Tablas en este diccionario',len(ts),'Las 26 tablas: tb_logs más 25 tablas auditadas.'],
  ['BD23','Eliminados',3,'tbc_gen_country_profile, tbc_gen_family_names, tbc_gen_given_names con sus 3 vistas, 9 triggers, 5 funciones fn_gen_* y 3 procedimientos (sp_gen_validate_params, sp_gen_insert_user_person, sp_generate_users).'],
  ['BD23','tb_orders',1,'Nueva columna cart_ID INT UNSIGNED NOT NULL UNIQUE, FK → tb_carts.ID (1:1 carrito-orden).'],
@@ -145,6 +155,7 @@ for t in ts:
 for typ,uses in enums.items(): sheets['Dominios_ENUM'].append([typ,typ[5:-1],', '.join(uses)])
 for typ,uses in stats.items(): sheets['Dominios_ENUM'].append(['status '+typ,'1 activo / 0 inactivo si bit; tinyint sin dominio declarado',', '.join(uses)])
 observations=[
+ ('Media','vw_trazabilidad_compras vincula logs y órdenes extrayendo el ID de tb_logs.description con expresiones regulares; depende del formato de texto de los triggers y no usa índices. Las vistas por caso identifican escenarios con heurísticas (método de pago, notes/reason con LIKE).','Guardar record_ID/order_ID estructurados en tb_logs o una tabla de casos de prueba.'),
  ('Alta','tbd_products_categories.category_ID carece de FK a tbc_categories.','Declarar FK y definir acciones referenciales.'),
  ('Resuelta','BD23 encadena tb_carts → tb_orders (1:1 por cart_ID UNIQUE) → tb_buyer_orders (1:N por order_ID) → tbd_order_items; el comprador de una suborden se obtiene por order_ID → tb_orders.user_id.','Sin acción.'),
  ('Media','tb_orders.total_amount y tb_buyer_orders.subtotal se almacenan sin regla que los sincronice; sp_pay_order cobra total_amount tal como está.','Recalcular totales antes de pagar.'),
@@ -181,7 +192,7 @@ with zipfile.ZipFile(D/'diccionario_datos.xlsx','w',zipfile.ZIP_DEFLATED) as z:
   end=colname(max(len(r) for r in sheets[n])); z.writestr(f'xl/worksheets/sheet{i}.xml','<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="30"/><sheetData>'+''.join(rows)+f'</sheetData><autoFilter ref="A1:{end}{len(sheets[n])}"/></worksheet>')
  z.writestr('xl/styles.xml','<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD9EAF7"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="1" borderId="0" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs></styleSheet>')
 # README
-(D/'README.md').write_text('# Diccionario de datos — DB Test (BD23)\n\nEntregables generados desde el DDL extraído de `Practica04/backups/BD23.sql` (base `db_test`): `diccionario_datos.md`, `diccionario_datos.xlsx`, `estructura.json`, `diagrama_er.mmd`, `schema.dbml`, el diagrama Archify `Practica04/diagrama/db-test-archify.html` y el sitio estático `Practica04/docs`. El diccionario documenta las 26 tablas (`tb_logs` y 25 tablas auditadas), sus 25 vistas, 75 triggers, 6 procedimientos y 10 funciones. Única excepción a “no guardar valores de filas”: se transcriben ID, código/nombre y descripción de los catálogos `tbc_payment_methods_types` y `tbc_payment_methods`.\n\nEl diagrama Archify se genera aparte: `python Practica04\\diccionario_datos\\generar_archify.py` escribe el candidato y luego se ejecuta `archify finalize erd`.\n\n## Regeneración segura\n\nDesde la raíz del repositorio, con Python 3:\n\n```powershell\npython Practica04\\diccionario_datos\\extraer.py\npython Practica04\\diccionario_datos\\contar_filas.py\npython Practica04\\diccionario_datos\\generar.py\npython Practica04\\diccionario_datos\\generar_modelos.py\npython Practica04\\diccionario_datos\\generar_sitio.py\n```\n\n`extraer.py` conserva exclusivamente DDL. `contar_filas.py` procesa las tuplas INSERT en streaming y persiste solo conteos agregados. Los conteos pertenecen al respaldo BD23, no a una instancia en vivo.\n',encoding='utf-8')
+(D/'README.md').write_text('# Diccionario de datos — DB Test (BD24)\n\nEntregables generados desde el DDL extraído de `Practica04/backups/BD24.sql` (base `db_test`): `diccionario_datos.md`, `diccionario_datos.xlsx`, `estructura.json`, `diagrama_er.mmd`, `schema.dbml`, el diagrama Archify `Practica04/diagrama/db-test-archify.html` y el sitio estático `Practica04/docs`. El diccionario documenta las 26 tablas (`tb_logs` y 25 tablas auditadas), sus 31 vistas (25 por tabla, `vw_trazabilidad_compras` y 5 vistas por caso de prueba), 75 triggers, 6 procedimientos y 10 funciones. Única excepción a “no guardar valores de filas”: se transcriben ID, código/nombre y descripción de los catálogos `tbc_payment_methods_types` y `tbc_payment_methods`.\n\nEl diagrama Archify se genera aparte (sigue reflejando BD23; BD24 no cambia tablas ni relaciones): `python Practica04\\diccionario_datos\\generar_archify.py` escribe el candidato y luego se ejecuta `archify finalize erd`.\n\n## Regeneración segura\n\nDesde la raíz del repositorio, con Python 3:\n\n```powershell\npython Practica04\\diccionario_datos\\extraer.py\npython Practica04\\diccionario_datos\\contar_filas.py\npython Practica04\\diccionario_datos\\generar.py\npython Practica04\\diccionario_datos\\generar_modelos.py\npython Practica04\\diccionario_datos\\generar_sitio.py\n```\n\n`extraer.py` conserva exclusivamente DDL. `contar_filas.py` procesa las tuplas INSERT en streaming y persiste solo conteos agregados. Los conteos pertenecen al respaldo BD24, no a una instancia en vivo.\n',encoding='utf-8')
 # validation
 counts={k:sum(x['kind']==k for x in O) for k in ('table','view','trigger','procedure')}; missing=[x[1] for x in fks if x[1] not in (D/'diccionario_datos.md').read_text(encoding='utf-8')]
 print(json.dumps({'conteos':counts,'FK_SQL':len(fks),'FK_nombres_ausentes_en_diccionario':missing,'hojas_XLSX':names},ensure_ascii=False))

@@ -21,7 +21,7 @@ DBML_STRUCTURAL_OK = len(DBML_TABLES) == len(TABLE_OBJECTS) and len(DBML_REFS) =
 
 def independent_insert_count(target):
     """Second count-only tokenizer for quoted top-level INSERT lines; stores no values."""
-    source = ROOT / 'backups' / 'BD23.sql'
+    source = ROOT / 'backups' / 'BD24.sql'
     active = False; in_values = False; depth = 0; total = 0
     with source.open('r', encoding='utf-8', errors='replace') as stream:
         for line in stream:

@@ -1,7 +1,7 @@
 # Diccionario de datos — DB Test
 
-**Motor objetivo:** MySQL 8.0.45. Estructura y totales de registros obtenidos del respaldo BD23.sql (fecha del archivo: 2026-11-19 10:41:01 -06:00). Conteo de registros realizado el: 2026-11-19 11:07:24 -06:00. Los totales corresponden al respaldo, no a la instancia en vivo.
-**Alcance:** las 26 tablas de db_test: `tb_logs` y 25 tablas auditadas, con sus 25 vistas de trazabilidad y 75 triggers. `tb_logs` no tiene vista ni trigger propio. Los catálogos `tbc_gen_*` y sus rutinas de generación ya no existen en BD23.
+**Motor objetivo:** MySQL 8.0.45. Estructura y totales de registros obtenidos del respaldo BD24.sql (fecha del archivo: 2026-11-19 22:39:22 -06:00). Conteo de registros realizado el: 2026-11-19 22:42:21 -06:00. Los totales corresponden al respaldo, no a la instancia en vivo.
+**Alcance:** las 26 tablas de db_test: `tb_logs` y 25 tablas auditadas, con sus 31 vistas de trazabilidad (25 por tabla, la vista consolidada `vw_trazabilidad_compras` y 5 vistas por caso de prueba `vw_trazabilidad_caso1`…`caso5`) y 75 triggers. `tb_logs` no tiene trigger propio; las vistas de compras la leen junto con las tablas del flujo de compra. Los catálogos `tbc_gen_*` y sus rutinas de generación ya no existen desde BD23.
 
 
 ## Leyenda de la notación
@@ -902,7 +902,7 @@
 - **Prefijo/tipo:** catálogo (tbc_). **Módulo:** pagos (inferido).
 - **Motor/charset/collation:** InnoDB / utf8mb4 / utf8mb4_0900_ai_ci, según opciones del DDL.
 - **Descripción general detallada:**
-  - Lista los métodos de pago disponibles para registrar pagos en tb_payments; sp_pay_order lo consulta por nombre. Valores registrados en BD23: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo.
+  - Lista los métodos de pago disponibles para registrar pagos en tb_payments; sp_pay_order lo consulta por nombre. Valores registrados en BD24: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo.
   - Pertenece al módulo de pagos (inferido por el prefijo y el nombre del objeto).
   - Relaciones salientes: ninguna FK declarada. Relaciones entrantes: tb_payments.`payment_method_id`.
   - Reglas SQL: sin CHECK; UNIQUE UNIQUE KEY `name` (`name`). Acciones ON DELETE/UPDATE: sin FK salientes con acciones. Columnas generadas: ninguna.
@@ -915,8 +915,8 @@
 | # | Nombre | Tipo | Longitud/precisión | NULL | Default | Extras | Llave | Descripción |
 |---:|---|---|---|:---:|---|---|---|---|
 | 1 | `ID` | `int unsigned` | — | NO | Sin default | AUTO_INCREMENT | PK | Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar. |
-| 2 | `name` | `varchar(100)` | 100 | NO | Sin default | — | UK | Guarda el nombre único del método de pago (UNIQUE). sp_pay_order lo recibe en p_payment_method_name para localizar el método activo. Valores registrados en BD23: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo. |
-| 3 | `description` | `text` | — | Sí | Sin default | — | — | Explica el método de pago; en BD23 indica que los métodos son simulados y que solo la tarjeta de crédito permite meses. |
+| 2 | `name` | `varchar(100)` | 100 | NO | Sin default | — | UK | Guarda el nombre único del método de pago (UNIQUE). sp_pay_order lo recibe en p_payment_method_name para localizar el método activo. Valores registrados en BD24: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo. |
+| 3 | `description` | `text` | — | Sí | Sin default | — | — | Explica el método de pago; en BD24 indica que los métodos son simulados y que solo la tarjeta de crédito permite meses. |
 | 4 | `status` | `bit(1)` | 1 | NO | b'1' | — | — | Indica el estado lógico del registro (inferido); usa DEFAULT b'1'. |
 | 5 | `creation_date` | `datetime` | — | NO | CURRENT_TIMESTAMP | — | — | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
 
@@ -937,8 +937,8 @@
 | Nombre | Valor | Origen | Obligatoriedad | Llave | Naturaleza | Composición formal | Dominio | Descripción detallada |
 |---|---|---|---|---|---|---|---|---|
 | `ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor aportado por sistema (AUTO_INCREMENT) | PK | Cualitativa nominal | ID = {dígito} | ID ∈ ℤ⁺; tipo int unsigned; AUTO_INCREMENT | Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar. |
-| `name` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | UK | Cualitativa nominal | name = {carácter} | name ∈ cadena(≤100); tipo varchar(100); valores registrados en BD23: {Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo, Cupón de regalo} | Guarda el nombre único del método de pago (UNIQUE). sp_pay_order lo recibe en p_payment_method_name para localizar el método activo. Valores registrados en BD23: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo. |
-| `description` | Monovalor | Almacenado | Opcional (NULL); valor capturado por usuario/proceso (inferido) | No | Cualitativa nominal | description = {carácter} | description ∈ texto (text); formato no restringido por CHECK | Explica el método de pago; en BD23 indica que los métodos son simulados y que solo la tarjeta de crédito permite meses. |
+| `name` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | UK | Cualitativa nominal | name = {carácter} | name ∈ cadena(≤100); tipo varchar(100); valores registrados en BD24: {Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo, Cupón de regalo} | Guarda el nombre único del método de pago (UNIQUE). sp_pay_order lo recibe en p_payment_method_name para localizar el método activo. Valores registrados en BD24: Tarjeta de débito, Tarjeta de crédito, Tarjeta digital Spin, Transferencia SPEI, Efectivo y Cupón de regalo. |
+| `description` | Monovalor | Almacenado | Opcional (NULL); valor capturado por usuario/proceso (inferido) | No | Cualitativa nominal | description = {carácter} | description ∈ texto (text); formato no restringido por CHECK | Explica el método de pago; en BD24 indica que los métodos son simulados y que solo la tarjeta de crédito permite meses. |
 | `status` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT b'1') | No | Cualitativa nominal | status = {0 \| 1} | status ∈ {0,1}; 1 activo, 0 inactivo (borrado lógico); bit(1) | Indica el estado lógico del registro (inferido); usa DEFAULT b'1'. |
 | `creation_date` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP) | No | Cuantitativa (temporal) | creation_date = {fecha/hora} | creation_date ∈ DATETIME; default CURRENT_TIMESTAMP | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
 
@@ -948,7 +948,7 @@
 - **Prefijo/tipo:** catálogo (tbc_). **Módulo:** pagos (inferido).
 - **Motor/charset/collation:** InnoDB / utf8mb4 / utf8mb4_0900_ai_ci, según opciones del DDL.
 - **Descripción general detallada:**
-  - Define tipos codificados que clasifican los métodos de pago guardados por los usuarios; sp_pay_order usa el código para permitir meses solo con CREDIT_CARD y apartar cupones GIFT_COUPON. Códigos registrados en BD23: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON.
+  - Define tipos codificados que clasifican los métodos de pago guardados por los usuarios; sp_pay_order usa el código para permitir meses solo con CREDIT_CARD y apartar cupones GIFT_COUPON. Códigos registrados en BD24: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON.
   - Pertenece al módulo de pagos (inferido por el prefijo y el nombre del objeto).
   - Relaciones salientes: ninguna FK declarada. Relaciones entrantes: tbd_user_payment_methods.`payment_method_type_ID`.
   - Reglas SQL: sin CHECK; UNIQUE UNIQUE KEY `code_UNIQUE` (`code`). Acciones ON DELETE/UPDATE: sin FK salientes con acciones. Columnas generadas: ninguna.
@@ -961,7 +961,7 @@
 | # | Nombre | Tipo | Longitud/precisión | NULL | Default | Extras | Llave | Descripción |
 |---:|---|---|---|:---:|---|---|---|---|
 | 1 | `ID` | `int unsigned` | — | NO | Sin default | AUTO_INCREMENT | PK | Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar. |
-| 2 | `code` | `varchar(30)` | 30 | NO | Sin default | — | UK | Guarda el código estable que identifica cada tipo de método de pago en el catálogo. Es obligatorio y único; sp_pay_order lo usa para aplicar reglas (meses solo con CREDIT_CARD; GIFT_COUPON se aparta al pagar). Códigos registrados en BD23: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON. |
+| 2 | `code` | `varchar(30)` | 30 | NO | Sin default | — | UK | Guarda el código estable que identifica cada tipo de método de pago en el catálogo. Es obligatorio y único; sp_pay_order lo usa para aplicar reglas (meses solo con CREDIT_CARD; GIFT_COUPON se aparta al pagar). Códigos registrados en BD24: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON. |
 | 3 | `description` | `text` | — | NO | Sin default | — | — | Describe en lenguaje natural el tipo de método de pago identificado por code; es obligatoria. |
 | 4 | `status` | `bit(1)` | 1 | NO | b'1' | — | — | Indica el estado lógico del registro (inferido); usa DEFAULT b'1'. |
 | 5 | `creation_date` | `datetime` | — | NO | CURRENT_TIMESTAMP | — | — | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
@@ -984,7 +984,7 @@
 | Nombre | Valor | Origen | Obligatoriedad | Llave | Naturaleza | Composición formal | Dominio | Descripción detallada |
 |---|---|---|---|---|---|---|---|---|
 | `ID` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor aportado por sistema (AUTO_INCREMENT) | PK | Cualitativa nominal | ID = {dígito} | ID ∈ ℤ⁺; tipo int unsigned; AUTO_INCREMENT | Identificador numérico generado automáticamente para distinguir registros; es llave primaria y se incrementa al insertar. |
-| `code` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | UK | Cualitativa nominal | code = {carácter} | code ∈ cadena(≤30); tipo varchar(30); valores registrados en BD23: {DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER, GIFT_COUPON} | Guarda el código estable que identifica cada tipo de método de pago en el catálogo. Es obligatorio y único; sp_pay_order lo usa para aplicar reglas (meses solo con CREDIT_CARD; GIFT_COUPON se aparta al pagar). Códigos registrados en BD23: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON. |
+| `code` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | UK | Cualitativa nominal | code = {carácter} | code ∈ cadena(≤30); tipo varchar(30); valores registrados en BD24: {DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER, GIFT_COUPON} | Guarda el código estable que identifica cada tipo de método de pago en el catálogo. Es obligatorio y único; sp_pay_order lo usa para aplicar reglas (meses solo con CREDIT_CARD; GIFT_COUPON se aparta al pagar). Códigos registrados en BD24: DEBIT_CARD, CREDIT_CARD, DIGITAL_CARD, SPEI_TRANSFER y GIFT_COUPON. |
 | `description` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor capturado por usuario/proceso (inferido) | No | Cualitativa nominal | description = {carácter} | description ∈ texto (text); formato no restringido por CHECK | Describe en lenguaje natural el tipo de método de pago identificado por code; es obligatoria. |
 | `status` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT b'1') | No | Cualitativa nominal | status = {0 \| 1} | status ∈ {0,1}; 1 activo, 0 inactivo (borrado lógico); bit(1) | Indica el estado lógico del registro (inferido); usa DEFAULT b'1'. |
 | `creation_date` | Monovalor | Almacenado | Obligatorio (NOT NULL); valor por sistema (DEFAULT CURRENT_TIMESTAMP) | No | Cuantitativa (temporal) | creation_date = {fecha/hora} | creation_date ∈ DATETIME; default CURRENT_TIMESTAMP | Registra una fecha u hora del ciclo de vida/auditoría (inferido); se asigna por defecto CURRENT_TIMESTAMP. |
@@ -1479,6 +1479,36 @@
 - **Tablas base:** `tb_logs`, `tb_carts`.
 - **Columnas expuestas:** `log_id` (tipo derivado de expresión; origen en SELECT), `operation` (tipo derivado de expresión; origen en SELECT), `inserted_by` (tipo derivado de expresión; origen en SELECT), `operation_description` (tipo derivado de expresión; origen en SELECT), `operation_date` (tipo derivado de expresión; origen en SELECT).
 
+### `vw_trazabilidad_caso1_compra_exitosa`
+
+- **Propósito:** Caso de prueba 1 (compra exitosa, sin modificaciones): filtra `vw_trazabilidad_compras` a las órdenes con exactamente un pago y cuyo método es 'Tarjeta de débito'. Ordena por `order_ID` y `log_id`.
+- **Tablas base:** `vw_trazabilidad_compras`, `tb_payments`, `tbc_payment_methods`.
+- **Columnas expuestas:** `test_case` (tipo derivado de expresión; origen en SELECT), `order_ID` (tipo derivado de expresión; origen en SELECT), `log_id` (tipo derivado de expresión; origen en SELECT), `table_name` (tipo derivado de expresión; origen en SELECT), `operation` (tipo derivado de expresión; origen en SELECT), `inserted_by` (tipo derivado de expresión; origen en SELECT), `connection_user` (tipo derivado de expresión; origen en SELECT), `operation_description` (tipo derivado de expresión; origen en SELECT), `operation_date` (tipo derivado de expresión; origen en SELECT).
+
+### `vw_trazabilidad_caso2_pagos_reclamacion`
+
+- **Propósito:** Caso de prueba 2 (pagos mensuales, último rechazado, reclamación y reenvío): filtra `vw_trazabilidad_compras` a las órdenes con más de un pago con 'Tarjeta de crédito' y que además tienen una devolución (`tb_returns`) en alguna de sus subórdenes. Ordena por `order_ID` y `log_id`.
+- **Tablas base:** `vw_trazabilidad_compras`, `tb_payments`, `tbc_payment_methods`, `tb_returns`, `tb_buyer_orders`.
+- **Columnas expuestas:** `test_case` (tipo derivado de expresión; origen en SELECT), `order_ID` (tipo derivado de expresión; origen en SELECT), `log_id` (tipo derivado de expresión; origen en SELECT), `table_name` (tipo derivado de expresión; origen en SELECT), `operation` (tipo derivado de expresión; origen en SELECT), `inserted_by` (tipo derivado de expresión; origen en SELECT), `connection_user` (tipo derivado de expresión; origen en SELECT), `operation_description` (tipo derivado de expresión; origen en SELECT), `operation_date` (tipo derivado de expresión; origen en SELECT).
+
+### `vw_trazabilidad_caso3_cancelacion_parcial`
+
+- **Propósito:** Caso de prueba 3 (cancelación parcial, ajuste y reembolso parcial): filtra `vw_trazabilidad_compras` a las órdenes con una cancelación de suborden que generó reembolso (`tb_refunds.cancellation_ID`) y cuya orden principal no quedó en estado 'Cancelled'. Ordena por `order_ID` y `log_id`.
+- **Tablas base:** `vw_trazabilidad_compras`, `tb_order_cancellations`, `tb_buyer_orders`, `tb_orders`, `tb_refunds`.
+- **Columnas expuestas:** `test_case` (tipo derivado de expresión; origen en SELECT), `order_ID` (tipo derivado de expresión; origen en SELECT), `log_id` (tipo derivado de expresión; origen en SELECT), `table_name` (tipo derivado de expresión; origen en SELECT), `operation` (tipo derivado de expresión; origen en SELECT), `inserted_by` (tipo derivado de expresión; origen en SELECT), `connection_user` (tipo derivado de expresión; origen en SELECT), `operation_description` (tipo derivado de expresión; origen en SELECT), `operation_date` (tipo derivado de expresión; origen en SELECT).
+
+### `vw_trazabilidad_caso4_punto_recoleccion`
+
+- **Propósito:** Caso de prueba 4 (mismo proveedor, entrega en punto de recolección): filtra `vw_trazabilidad_compras` a las órdenes con un envío cuyo campo `notes` menciona 'punto de recolección'. Ordena por `order_ID` y `log_id`.
+- **Tablas base:** `vw_trazabilidad_compras`, `tb_shipments`, `tb_buyer_orders`.
+- **Columnas expuestas:** `test_case` (tipo derivado de expresión; origen en SELECT), `order_ID` (tipo derivado de expresión; origen en SELECT), `log_id` (tipo derivado de expresión; origen en SELECT), `table_name` (tipo derivado de expresión; origen en SELECT), `operation` (tipo derivado de expresión; origen en SELECT), `inserted_by` (tipo derivado de expresión; origen en SELECT), `connection_user` (tipo derivado de expresión; origen en SELECT), `operation_description` (tipo derivado de expresión; origen en SELECT), `operation_date` (tipo derivado de expresión; origen en SELECT).
+
+### `vw_trazabilidad_caso5_falta_inventario`
+
+- **Propósito:** Caso de prueba 5 (compra fallida por falta de inventario): filtra `vw_trazabilidad_compras` a las órdenes en estado 'Cancelled' con una cancelación cuyo motivo menciona 'inventario'. Ordena por `order_ID` y `log_id`.
+- **Tablas base:** `vw_trazabilidad_compras`, `tb_order_cancellations`, `tb_buyer_orders`, `tb_orders`.
+- **Columnas expuestas:** `test_case` (tipo derivado de expresión; origen en SELECT), `order_ID` (tipo derivado de expresión; origen en SELECT), `log_id` (tipo derivado de expresión; origen en SELECT), `table_name` (tipo derivado de expresión; origen en SELECT), `operation` (tipo derivado de expresión; origen en SELECT), `inserted_by` (tipo derivado de expresión; origen en SELECT), `connection_user` (tipo derivado de expresión; origen en SELECT), `operation_description` (tipo derivado de expresión; origen en SELECT), `operation_date` (tipo derivado de expresión; origen en SELECT).
+
 ### `vw_trazabilidad_categorias`
 
 - **Propósito:** presenta trazabilidad de categorias mediante la consulta definida en SQL (inferido).
@@ -1490,6 +1520,12 @@
 - **Propósito:** presenta trazabilidad de componentes direccion mediante la consulta definida en SQL (inferido).
 - **Tablas base:** `tb_logs`, `tbd_address_components`.
 - **Columnas expuestas:** `log_id` (tipo derivado de expresión; origen en SELECT), `operation` (tipo derivado de expresión; origen en SELECT), `inserted_by` (tipo derivado de expresión; origen en SELECT), `operation_description` (tipo derivado de expresión; origen en SELECT), `operation_date` (tipo derivado de expresión; origen en SELECT).
+
+### `vw_trazabilidad_compras`
+
+- **Propósito:** Vista consolidada de trazabilidad por orden. Con CTE (`entidades`, `bitacora`, `movimientos`, `ventana`, `inventario`) relaciona cada orden (`tb_orders.ID`) con todas las entidades de su flujo de compra —carrito y sus artículos, usuario, persona, direcciones y sus componentes, subórdenes, artículos de orden, producto-proveedor, método de pago del usuario, pagos, transacciones, reembolsos, envíos, devoluciones y cancelaciones— y une esas claves con los registros de `tb_logs` extrayendo el ID de `description`. Agrega los movimientos de stock de `tb_products` (Update con 'stock') ocurridos dentro de la ventana de logs de la orden. Es la base de las cinco vistas por caso.
+- **Tablas base:** `tb_orders`, `tb_people`, `tb_user_addresses`, `tbd_address_components`, `tb_buyer_orders`, `tbd_order_items`, `tb_payments`, `tb_payment_transaction`, `tb_refunds`, `tb_shipments`, `tb_returns`, `tb_order_cancellations`, `tb_logs`, `tb_carts`, `tbd_carts_items`, `tb_users`, `tbd_products_users_providers`, `tbd_user_payment_methods`, `tbd_return_items`, `tbd_cancellation_items`, `tb_products`.
+- **Columnas expuestas:** `order_ID` (tipo derivado de expresión; origen en SELECT), `log_id` (tipo derivado de expresión; origen en SELECT), `table_name` (tipo derivado de expresión; origen en SELECT), `operation` (tipo derivado de expresión; origen en SELECT), `inserted_by` (tipo derivado de expresión; origen en SELECT), `connection_user` (tipo derivado de expresión; origen en SELECT), `operation_description` (tipo derivado de expresión; origen en SELECT), `operation_date` (tipo derivado de expresión; origen en SELECT).
 
 ### `vw_trazabilidad_detalle_cancelaciones`
 
@@ -1967,6 +2003,7 @@
 
 ## Observaciones de calidad del diseño
 
+- **Media —** `vw_trazabilidad_compras` vincula los logs con cada orden extrayendo el ID de `tb_logs.description` con expresiones regulares (`ID[=:] ?[0-9]+`; `user_ID=…|product_ID=…` para producto-proveedor); depende del formato de texto de los triggers y no puede usar índices. Las vistas por caso identifican cada escenario con heurísticas (nombre del método de pago, `notes LIKE "%punto de recolecci%"`, `reason LIKE "%inventario%"`), por lo que otra orden con datos similares aparecería en el caso. Recomendación: guardar en `tb_logs` columnas estructuradas (`record_ID`, `order_ID`) o una tabla de casos de prueba.
 - **Alta —** `tbd_products_categories.category_ID` carece de FK a `tbc_categories`. Recomendación: declarar FK y decidir acciones referenciales.
 - **Resuelta en BD23 —** el flujo de compra quedó encadenado: `tb_carts` → `tb_orders` (1:1 por `cart_ID` UNIQUE) → `tb_buyer_orders` (1:N por `order_ID`, una suborden por vendedor) → `tbd_order_items`; los pagos cuelgan de `tb_orders` y envíos, devoluciones y cancelaciones de `tb_buyer_orders`. El comprador de una suborden se obtiene por `order_ID → tb_orders.user_id`.
 - **Media —** `tb_orders.total_amount` y `tb_buyer_orders.subtotal` se almacenan sin regla que los sincronice con sus subórdenes/líneas, y `sp_pay_order` cobra `total_amount` tal como está. Recomendación: recalcular totales en un procedimiento o trigger antes de pagar.
@@ -1980,11 +2017,11 @@
 - **Media —** `tbd_carts_items` y `tbd_order_items` separan referencias a usuario y producto hacia `tbd_products_users_providers` en vez de declarar una FK compuesta. Recomendación: añadir integridad compuesta o validación equivalente.
 - **Baja —** courtesy_title_ID y country_code sin catálogo ni FK: en `tb_people` son `char(10)` y `char(2)` respectivamente; tampoco existe `fk_people_courtesy_title` ni `fk_people_country`. Recomendación: incorporar catálogos y restricciones si esos códigos deben validarse.
 
-**Referencias huérfanas:** las definiciones de BD23 no contienen referencias a `tbd_order_details`, `tbd_wishlist`, `tbd_shopping_cart` ni `tb_users_offer_products`; esas tablas no aparecen en esta versión. La ausencia de referencias se verifica en DDL, no en valores de filas.
+**Referencias huérfanas:** las definiciones de BD24 no contienen referencias a `tbd_order_details`, `tbd_wishlist`, `tbd_shopping_cart` ni `tb_users_offer_products`; esas tablas no aparecen en esta versión. La ausencia de referencias se verifica en DDL, no en valores de filas.
 
 ## Pendientes por confirmar
 
-- Confirmar qué proceso crea `tb_orders` a partir de un carrito y genera sus `tb_buyer_orders` por vendedor; BD23 no incluye un procedimiento de checkout, solo `sp_pay_order`.
+- Confirmar qué proceso crea `tb_orders` a partir de un carrito y genera sus `tb_buyer_orders` por vendedor; BD24 no incluye un procedimiento de checkout, solo `sp_pay_order`.
 - Confirmar el catálogo y semántica de `tb_people.gender_ID`, `courtesy_title_ID` y `country_code`.
 - Confirmar si `tb_people` tiene vínculo obligatorio 1:1 con `tb_users` y el uso de los perfiles.
 - Confirmar qué pasarelas crean `gateway_reference` y `transaction_reference` y cómo se concilian.
@@ -2011,8 +2048,8 @@
 
 ## Volumen de datos
 
-Estructura y totales de registros obtenidos del respaldo BD23.sql (fecha del archivo: 2026-11-19 10:41:01 -06:00). Conteo de registros realizado el: 2026-11-19 11:07:24 -06:00. Los totales corresponden al respaldo, no a la instancia en vivo.
-- Conteo de registros realizado el: 2026-11-19 11:07:24 -06:00. Los valores son conteos de filas INSERT del respaldo BD23.sql, no de la instancia en vivo.
+Estructura y totales de registros obtenidos del respaldo BD24.sql (fecha del archivo: 2026-11-19 22:39:22 -06:00). Conteo de registros realizado el: 2026-11-19 22:42:21 -06:00. Los totales corresponden al respaldo, no a la instancia en vivo.
+- Conteo de registros realizado el: 2026-11-19 22:42:21 -06:00. Los valores son conteos de filas INSERT del respaldo BD24.sql, no de la instancia en vivo.
 - Total verificable: 136,929 registros en 25 tablas; 1 tablas sin INSERT no son verificables en el respaldo.
 
 | Tabla | Registros | Porcentaje del total verificable |
@@ -2047,7 +2084,7 @@ Estructura y totales de registros obtenidos del respaldo BD23.sql (fecha del arc
 
 ## Valores de catálogo
 
-Filas registradas en BD23.sql para los catálogos de pago (se transcriben solo ID, código/nombre y descripción).
+Filas registradas en BD24.sql para los catálogos de pago (se transcriben solo ID, código/nombre y descripción).
 
 ### Catálogo `tbc_payment_methods_types`
 
@@ -2072,7 +2109,17 @@ Filas registradas en BD23.sql para los catálogos de pago (se transcriben solo I
 
 ## Historial de cambios
 
-- Fuente actualizada a BD23 (`Practica04/backups/BD23.sql`, base `db_test`), versión MySQL 8.0.45. Versión anterior del diccionario: BD19 (`Practica03`).
+### BD24 (versión actual)
+
+- Fuente actualizada a BD24 (`Practica04/backups/BD24.sql`, base `db_test`), versión MySQL 8.0.45. Versión anterior del diccionario: BD23.
+- Esquema completo BD24: 26 tablas, 31 vistas, 75 triggers, 6 procedimientos, 10 funciones, 202 columnas y 38 FK.
+- Nueva vista consolidada `vw_trazabilidad_compras` (order_ID, log_id, table_name, operation, inserted_by, connection_user, operation_description, operation_date): reúne por orden los registros de `tb_logs` de todas las tablas del flujo de compra y los movimientos de stock de `tb_products`.
+- Nuevas vistas por caso de prueba, construidas sobre `vw_trazabilidad_compras` con la columna adicional `test_case`: `vw_trazabilidad_caso1_compra_exitosa`, `vw_trazabilidad_caso2_pagos_reclamacion`, `vw_trazabilidad_caso3_cancelacion_parcial`, `vw_trazabilidad_caso4_punto_recoleccion` y `vw_trazabilidad_caso5_falta_inventario`.
+- Las 25 vistas por tabla, tablas, columnas, FK, triggers, procedimientos y funciones no cambian respecto a BD23. Los INSERT del respaldo (incluidos los registros de `tb_logs`) son idénticos a los de BD23, por lo que los conteos no cambian.
+
+### BD23
+
+- Fuente: `Practica04/backups/BD23.sql`. Versión anterior del diccionario: BD19 (`Practica03`).
 - Esquema completo BD23: 26 tablas, 25 vistas, 75 triggers, 6 procedimientos, 10 funciones, 202 columnas y 38 FK.
 - Este diccionario documenta las 26 tablas: `tb_logs` y las 25 tablas auditadas.
 - Eliminados: tablas `tbc_gen_country_profile`, `tbc_gen_family_names` y `tbc_gen_given_names`, con sus vistas `vw_trazabilidad_gen_apellidos`, `vw_trazabilidad_gen_nombres_pila` y `vw_trazabilidad_gen_perfiles_pais`, sus 9 triggers, las funciones `fn_gen_courtesy_title`, `fn_gen_family_name`, `fn_gen_given_name`, `fn_gen_phone` y `fn_gen_random_country`, y los procedimientos `sp_gen_validate_params`, `sp_gen_insert_user_person` y `sp_generate_users`.
